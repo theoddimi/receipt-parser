@@ -1,0 +1,45 @@
+{
+    "name": "theod/receipt-parser",
+    "description": "Receipt content parser using cloud vision api",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Theod\\ReceiptParser\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Theod\\ReceiptParser\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "guzzlehttp/guzzle": "^7.5",
+        "guzzlehttp/psr7": "^1.8",
+        "illuminate/support": "^10.4"
+    },
+    "authors": [
+        {
+            "name": "theoddimi",
+            "email": "theoddimi@hotmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "optimize-autoloader": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Theod\\ReceiptParser\\Providers\\ReceiptParserServiceProvider"
+            ],
+            "aliases": {
+                "ReceiptParser": "Theod\\ReceiptParser\\Facades\\ReceiptParser"
+            }
+        }
+    }
+}
