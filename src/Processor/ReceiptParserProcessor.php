@@ -48,12 +48,11 @@ class ReceiptParserProcessor implements ReceiptParserProcessorInterface
 
     public function __construct()
     {
-//        $this->cloudVisionOcrResponse = Http::withBody(self::REQUEST, self::CONTENT_TYPE)->post('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAESqWO1coM4KU_2llvQ6mN9sAE9UtDIFk');
     }
 
     private function request()
     {
-        $this->cloudVisionOcrResponse = Http::withBody(self::REQUEST, self::CONTENT_TYPE)->post('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAESqWO1coM4KU_2llvQ6mN9sAE9UtDIFk');
+        $this->cloudVisionOcrResponse = Http::withBody(self::REQUEST, self::CONTENT_TYPE)->post('https://vision.googleapis.com/v1/images:annotate?key=' . env('GOOGLE_API_KEY'));
     }
 
     public function run()
