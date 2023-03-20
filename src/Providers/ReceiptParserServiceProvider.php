@@ -5,6 +5,7 @@ namespace Theod\ReceiptParser\Providers;
 use Illuminate\Support\ServiceProvider;
 use Theod\ReceiptParser\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\ReceiptParser\Processor\ReceiptParserProcessor;
+use Theod\ReceiptParser\Services\CloudVisionServiceProvider;
 
 final class ReceiptParserServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,7 @@ final class ReceiptParserServiceProvider extends ServiceProvider
     }
 
     public function register(){
+        $this->app->register(CloudVisionServiceProvider::class);
         $this->app->bind(ReceiptParserProcessorInterface::class, ReceiptParserProcessor::class);
     }
 }

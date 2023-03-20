@@ -5,60 +5,26 @@ namespace Theod\ReceiptParser\Processor;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Theod\ReceiptParser\Processor\Contracts\ReceiptParserProcessorInterface;
+use Theod\ReceiptParser\Services\CloudVisionService;
 
 class ReceiptParserProcessor implements ReceiptParserProcessorInterface
 {
     private const CONTENT_TYPE = 'application/json';
-    private const REQUEST = '{
-  "requests": [
-    {
-      "image": {
-          "source": {
-              "imageUri": "gs://gainz-expensea-train/image1-0.jpg"
-          }
-          },
-      "features": [
-        {
-          "type": "DOCUMENT_TEXT_DETECTION",
-          "model":"builtin/weekly"
-        },
-      ],
-      "imageContext": {
-        "cropHintsParams": {
-            "aspectRatios": [
-             0.8,
-            1,
-            1.2
-            ]
-        },
-        "languageHints": [
-            "el", "en"
-        ],
-        "textDetectionParams": {
-            "enableTextDetectionConfidenceScore": true,
-            "advancedOcrOptions": [
-                "legacy_layout"                    
-            ],
-        },
-      }
-    }
-  ]
-}';
+
     private Response $cloudVisionOcrResponse;
 
-    public function __construct()
-    {
-    }
+    public function __construct(
+        private CloudVisionService $cloudVisionService
+    ){}
 
     private function request()
     {
-        $this->cloudVisionOcrResponse = Http::withBody(self::REQUEST, self::CONTENT_TYPE)->post('https://vision.googleapis.com/v1/images:annotate?key=' . env('GOOGLE_API_KEY'));
     }
 
     public function run()
     {
-        $this->request();
-        $response = json_decode($this->cloudVisionOcrResponse->body(), true);
+        $response = $this->cloudVisionService->postData();
+        $responseJson = $response->json();
 
         $start_time = microtime(true);
 // Init variables
@@ -73,7 +39,7 @@ class ReceiptParserProcessor implements ReceiptParserProcessorInterface
 
 // Find orientation of blocks returned
 // Blocks
-        $firstBlockTextAnnotation = $response["responses"][0]["textAnnotations"][1];
+        $firstBlockTextAnnotation = $responseJson["responses"][0]["textAnnotations"][1];
         $boundingPolyVertices = $firstBlockTextAnnotation["boundingPoly"]['vertices'];
         $firstWordWidth = $boundingPolyVertices[0]["x"] + $boundingPolyVertices[1]["x"] + $boundingPolyVertices[2]["x"] + $boundingPolyVertices[3]["x"];
         $firstWordHeight = $boundingPolyVertices[0]["y"] + $boundingPolyVertices[1]["y"] + $boundingPolyVertices[2]["y"] + $boundingPolyVertices[3]["y"];
@@ -81,7 +47,7 @@ class ReceiptParserProcessor implements ReceiptParserProcessorInterface
 
 
 // Blocks
-        $blocks = $response["responses"][0]["fullTextAnnotation"]["pages"][0]["blocks"];
+        $blocks = $responseJson["responses"][0]["fullTextAnnotation"]["pages"][0]["blocks"];
 
 // First line coordinates. Same as the first letter of firstblock found from the scanned document.
         $firstSymbolBounds = $blocks[0]['paragraphs'][0]['words'][0]['symbols'][0]['boundingBox']['vertices'];
