@@ -30,15 +30,5 @@
         "sort-packages": true,
         "preferred-install": "dist",
         "optimize-autoloader": true
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Theod\\ReceiptParser\\Providers\\ReceiptParserServiceProvider"
-            ],
-            "aliases": {
-                "ReceiptParser": "Theod\\ReceiptParser\\Facades\\ReceiptParser"
-            }
-        }
     }
 }
