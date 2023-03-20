@@ -13,8 +13,8 @@ class CloudVisionServiceProvider extends ServiceProvider
     {
         $this->app->singleton(CloudVisionService::class, function (Application $app) {
             $client = Http::withOptions([
-                'base_uri' => 'https://vision.googleapis.com/v1',
-            ])->withHeaders(['Content-Type' => 'application/json'])->withUrlParameters(['key' => config('services.cloud_vision.api_key'),]);
+                'base_uri' => 'https://vision.googleapis.com/v1/',
+            ])->withHeaders(['Content-Type' => 'application/json'])->withUrlParameters(['key' => config('services.cloud_vision.api_key')]);
 //            ])->withToken(config('services.example.token'));
 
             return new CloudVisionService($client);
