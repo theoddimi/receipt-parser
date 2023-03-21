@@ -46,7 +46,7 @@ class CloudVisionService
 
     public function postData(string $pathToReceipt = ''):  Response
     {
-        return $this->client->withBody(self::REQUEST_BODY)->post('images:annotate/{key}');
+        return $this->client->withBody(self::REQUEST_BODY)->send('post','images:annotate/{key}');
     }
 
 }

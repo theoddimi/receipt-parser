@@ -23,7 +23,6 @@ class ReceiptParserProcessor implements ReceiptParserProcessorInterface
 
     public function run()
     {
-        dd($this->cloudVisionService);
         $response = $this->cloudVisionService->postData();
         $responseJson = $response->json();
 
