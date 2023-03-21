@@ -20,5 +20,4 @@ class CloudVisionServiceProvider extends ServiceProvider
             return new CloudVisionService($client);
         });
     }
-
 }
