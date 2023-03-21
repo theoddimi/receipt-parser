@@ -4,5 +4,5 @@ namespace Theod\ReceiptParser\Processor\Contracts;
 
 interface ReceiptParserProcessorInterface
 {
-    public function run();
+    function run();
 }

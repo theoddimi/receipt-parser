@@ -4,26 +4,22 @@ namespace Theod\ReceiptParser\Processor;
 
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use Theod\ReceiptParser\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\ReceiptParser\Services\CloudVisionService;
 
-class ReceiptParserProcessor implements ReceiptParserProcessorInterface
+class ReceiptParserProcessor extends Processor
 {
     private const CONTENT_TYPE = 'application/json';
 
     private Response $cloudVisionOcrResponse;
 
     public function __construct(
-        private CloudVisionService $cloudVisionService
+        private readonly CloudVisionService $cloudVisionService
     ){}
-
-    private function request()
-    {
-    }
 
     public function run()
     {
         $response = $this->cloudVisionService->postData();
+
         $responseJson = $response->json();
         $start_time = microtime(true);
 // Init variables
