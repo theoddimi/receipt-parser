@@ -25,7 +25,7 @@ class ReceiptParserProcessor implements ReceiptParserProcessorInterface
     {
         $response = $this->cloudVisionService->postData();
         $responseJson = $response->json();
-
+dd($this->cloudVisionService,$response);
         $start_time = microtime(true);
 // Init variables
         $currentBlockLineY = -1;
