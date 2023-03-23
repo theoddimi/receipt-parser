@@ -1,10 +1,10 @@
 <?php
 
-namespace Theod\ReceiptParser\Providers;
+namespace Theod\CloudVisionClient\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Theod\ReceiptParser\Processor\Contracts\ReceiptParserProcessorInterface;
-use Theod\ReceiptParser\Processor\ReceiptParserProcessor;
+use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
+use Theod\CloudVisionClient\Processor\ReceiptParserProcessor;
 
 final class ReceiptParserServiceProvider extends ServiceProvider
 {

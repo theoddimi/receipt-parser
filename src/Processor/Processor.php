@@ -1,11 +1,10 @@
 <?php
 
-namespace Theod\ReceiptParser\Processor;
+namespace Theod\CloudVisionClient\Processor;
 
-use Theod\ReceiptParser\Enums\ProcessorStatus;
-use Theod\ReceiptParser\Processor\Contracts\ReceiptParserProcessorInterface;
+use Theod\CloudVisionClient\Enums\ProcessorStatus;
 
-abstract class Processor  implements ReceiptParserProcessorInterface
+abstract class Processor
 {
     private float $start;
     private float $end;
@@ -18,6 +17,7 @@ abstract class Processor  implements ReceiptParserProcessorInterface
     protected function start(): void
     {
         $this->start =  microtime(true);
+        $this->status = new ProcessorStatus(ProcessorStatus::IN_PROGRESS);
     }
 
     /**
@@ -56,6 +56,14 @@ abstract class Processor  implements ReceiptParserProcessorInterface
     protected function setStatus(ProcessorStatus $status): void
     {
         $this->status = $status;
+    }
+
+    /**
+     * @return void
+     */
+    protected function setFailed(): void
+    {
+        $this->status = new ProcessorStatus(ProcessorStatus::FAILED);
     }
 
     abstract function run();

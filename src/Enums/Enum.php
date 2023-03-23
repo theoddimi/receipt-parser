@@ -1,6 +1,6 @@
 <?php
 
-namespace Theod\ReceiptParser\Enums;
+namespace Theod\CloudVisionClient\Enums;
 
 use Exception;
 

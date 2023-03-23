@@ -1,30 +1,33 @@
 <?php
 
-namespace Theod\ReceiptParser\Processor;
+namespace Theod\CloudVisionClient\Processor;
 
 use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
-use Theod\ReceiptParser\Services\CloudVisionService;
+use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
+use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
+use Theod\CloudVisionClient\Services\CloudVisionService;
 
-class ReceiptParserProcessor extends Processor
+class ReceiptParserProcessor extends Processor implements ReceiptParserProcessorInterface
 {
     private const CONTENT_TYPE = 'application/json';
 
-    private Response $cloudVisionOcrResponse;
+    private Response $cloudVisionResponse;
 
     public function __construct(
-        private readonly CloudVisionService $cloudVisionService
+        private readonly CloudVisionService $cloudVisionService,
+        private readonly ReceiptParserUtility $receiptParserUtility
     ){}
 
     public function run()
     {
-        $response = $this->cloudVisionService->postData();
+        $this->start();
 
-        $responseJson = $response->json();
-        $start_time = microtime(true);
+        $this->cloudVisionResponse = $this->cloudVisionService->postImageAnnotate();
+        $responseJson = $this->cloudVisionResponse->json();
+
+
 // Init variables
         $currentBlockLineY = -1;
-        $currentBlockLineX = -1;
         $yThreshold = 10;
         $symbolsMetaData = [];
         $composeBlockLineDescription = [];
@@ -33,12 +36,7 @@ class ReceiptParserProcessor extends Processor
 
 
 // Find orientation of blocks returned
-// Blocks
-        $firstBlockTextAnnotation = $responseJson["responses"][0]["textAnnotations"][1];
-        $boundingPolyVertices = $firstBlockTextAnnotation["boundingPoly"]['vertices'];
-        $firstWordWidth = $boundingPolyVertices[0]["x"] + $boundingPolyVertices[1]["x"] + $boundingPolyVertices[2]["x"] + $boundingPolyVertices[3]["x"];
-        $firstWordHeight = $boundingPolyVertices[0]["y"] + $boundingPolyVertices[1]["y"] + $boundingPolyVertices[2]["y"] + $boundingPolyVertices[3]["y"];
-        $orientation = $firstWordWidth > $firstWordHeight === true ? '0d' : '90d';
+        $blocksOrientation = $this->receiptParserUtility->assumeBlocksOrientationFromJsonResponse($responseJson);
 
 
 // Blocks
@@ -71,7 +69,7 @@ class ReceiptParserProcessor extends Processor
                     foreach ($symbols as $symbolKey=>$symbol) {
                         ################ Calculate current symbol's y and check line status #########################
                         // Calculate the average of symbols' left and right boundaries y coordinates for top and bottom side
-                        if ($orientation === '0d') {
+                        if ($blocksOrientation === '0d') {
                             $symbolTopYBoundAvg = ($symbol['boundingBox']['vertices'][0]['y'] + $symbol['boundingBox']['vertices'][1]['y']) / 2;
                             $symbolBottomYBoundAvg = ($symbol['boundingBox']['vertices'][2]['y'] + $symbol['boundingBox']['vertices'][3]['y']) / 2;
 
@@ -88,7 +86,7 @@ class ReceiptParserProcessor extends Processor
 
                         ################ Calculate current symbol x and check line status #########################
                         // Calculate the average of symbols' left and right boundaries y coordinates for top and bottom side
-                        if ($orientation === '0d') {
+                        if ($blocksOrientation === '0d') {
                             $symbolLeftXBoundAvg = ($symbol['boundingBox']['vertices'][0]['x'] + $symbol['boundingBox']['vertices'][3]['x']) / 2;
                             $symbolRightXBoundAvg = ($symbol['boundingBox']['vertices'][1]['x'] + $symbol['boundingBox']['vertices'][2]['x']) / 2;
 
@@ -169,7 +167,7 @@ class ReceiptParserProcessor extends Processor
 
                     foreach ($composeBlockLineDescription[$counter] as $lineDataBKey => $lineDataB) {
                         if (abs($lineDataA["blockLineStartY"] - $lineDataB["blockLineEndY"]) <= $thresholdIndicatorForSameLine) { // Means  that A is in same line with B
-                            if ($orientation === '0d') {
+                            if ($blocksOrientation === '0d') {
                                 if ($lineDataA["blockLineStartX"] > $lineDataB["blockLineStartX"]) {
                                     $lineMatchFound = true;
                                     $notFound = false;

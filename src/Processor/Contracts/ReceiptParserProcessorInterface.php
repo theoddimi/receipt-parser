@@ -1,6 +1,6 @@
 <?php
 
-namespace Theod\ReceiptParser\Processor\Contracts;
+namespace Theod\CloudVisionClient\Processor\Contracts;
 
 interface ReceiptParserProcessorInterface
 {

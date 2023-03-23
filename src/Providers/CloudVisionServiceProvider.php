@@ -1,11 +1,11 @@
 <?php
 
-namespace Theod\ReceiptParser\Providers;
+namespace Theod\CloudVisionClient\Providers;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
-use Theod\ReceiptParser\Services\CloudVisionService;
+use Theod\CloudVisionClient\Services\CloudVisionService;
 
 class CloudVisionServiceProvider extends ServiceProvider
 {

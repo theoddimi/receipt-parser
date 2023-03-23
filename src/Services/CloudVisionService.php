@@ -1,6 +1,6 @@
 <?php
 
-namespace Theod\ReceiptParser\Services;
+namespace Theod\CloudVisionClient\Services;
 
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -44,7 +44,7 @@ class CloudVisionService
 }';
     public function __construct(private readonly PendingRequest $client){}
 
-    public function postData(string $pathToReceipt = ''):  Response
+    public function postImageAnnotate(string $pathToReceipt = ''):  Response
     {
         return $this->client->withBody(self::REQUEST_BODY)->send('post','images:annotate?key={key}');
     }
