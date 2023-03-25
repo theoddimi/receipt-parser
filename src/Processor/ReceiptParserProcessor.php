@@ -7,7 +7,7 @@ use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\CloudVisionClient\Services\CloudVisionService;
-use Theod\ReceiptParser\Objects\Uri;
+use Theod\CloudVisionClient\Objects\Uri;
 
 class ReceiptParserProcessor extends Processor implements ReceiptParserProcessorInterface
 {
