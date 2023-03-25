@@ -1,6 +1,6 @@
 <?php
 
-namespace Theod\ReceiptParser\Objects;
+namespace Theod\CloudVision\Objects;
 
 class Uri
 {
