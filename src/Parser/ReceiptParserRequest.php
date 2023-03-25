@@ -50,20 +50,26 @@ class ReceiptParserRequest extends ParserRequest
     public function __construct()
     {
         $this->body['requests'] = [
-            'image' => [
-                'source' => ['imageUri' => '']
-            ],
-            'features' => [
-                [
-                    'type' => 'DOCUMENT_TEXT_DETECTION',
-                    'model' => 'builtin/weekly'
+            [
+                'image' => [
+                    'source' => ['imageUri' => '']
+                ],
+                'features' => [
+                    [
+                        'type' => 'DOCUMENT_TEXT_DETECTION',
+                        'model' => 'builtin/weekly'
+                    ]
+                ],
+                'imageContext' => [
+                    'cropHintsParams' => [
+                        'aspectRatios' => []
+                    ],
+                    'languageHints' => ['el', 'en'],
+                    'textDetectionParams' => [
+                        'enableTextDetectionConfidenceScore' => true,
+                        'advancedOcrOptions' => ['legacy_layout']
+                    ]
                 ]
-            ],
-            'imageContext' => ['cropHintsParams' => ['aspectRatios' => []]],
-            'languageHints' => ['el', 'en'],
-            'textDetectionParams' => [
-                'enableTextDetectionConfidenceScore' => true,
-                'advancedOcrOptions' => ['legacy_layout']
             ]
         ];
     }
