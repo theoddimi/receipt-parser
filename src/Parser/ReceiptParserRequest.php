@@ -80,7 +80,7 @@ class ReceiptParserRequest extends ParserRequest
      */
     public function addSourceUriToBody(Uri $uri): self
     {
-        $this->body['requests']['image']['source']['imageUri'] = $uri->getValue();
+        $this->body['requests'][0]['image']['source']['imageUri'] = $uri->getValue();
 
         return $this;
     }
