@@ -2,7 +2,7 @@
 
 namespace Theod\CloudVisionClient\Parser;
 
-use Theod\ReceiptParser\Objects\Uri;
+use Theod\CloudVisionClient\Objects\Uri;
 
 class ReceiptParserRequest extends ParserRequest
 {

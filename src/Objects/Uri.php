@@ -1,6 +1,6 @@
 <?php
 
-namespace Theod\CloudVision\Objects;
+namespace Theod\CloudVisionClient\Objects;
 
 class Uri
 {
