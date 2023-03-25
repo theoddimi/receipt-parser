@@ -79,6 +79,22 @@ class ReceiptParserRequest extends ParserRequest
         return $this;
     }
 
+    /**
+     * @return string
+     */
+    public function getBodyAsJson(): string
+    {
+        return json_encode($this->body);
+    }
+
+    /**
+     * @return array
+     */
+    public function getBody(): array
+    {
+        return $this->body;
+    }
+
 //    public static function createBodyRequest(string $jsonResponse)
 //    {
 //        $receiptParser = new self();
