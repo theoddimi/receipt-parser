@@ -222,8 +222,8 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
 
         $end_time = microtime(true);
 // Calculating the script execution time
-        $execution_time = $end_time - $start_time;
+//        $execution_time = $end_time - $start_time;
 
-        echo "\n\n Execution time of script = " . $execution_time . " sec";
+//        echo "\n\n Execution time of script = " . $execution_time . " sec";
     }
 }

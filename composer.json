@@ -5,12 +5,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Theod\\ReceiptParser\\": "src/"
+            "Theod\\CloudVisionClient\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Theod\\ReceiptParser\\": "tests/"
+            "Theod\\CloudVisionClient\\": "tests/"
         }
     },
     "require": {
