@@ -20,14 +20,15 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         private readonly ReceiptParserUtility $receiptParserUtility
     ){}
 
+
     public function run()
     {
         $this->start();
 
         $receiptParserRequest = new ReceiptParserRequest();
-        $receiptParserRequest->addSourceUriToBody(new Uri('gs://gainz-expensea-train/image1-0.jpg'));
+        $receiptParserRequest->addSourceUriToBody($this->getSourceUriToProcess());
 
-        $this->cloudVisionResponse = $this->cloudVisionService->postImageAnnotate();
+        $this->cloudVisionResponse = $this->cloudVisionService->postImageAnnotateWithRequest($receiptParserRequest);
         $responseJson = $this->cloudVisionResponse->json();
 
 

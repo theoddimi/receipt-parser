@@ -4,6 +4,8 @@ namespace Theod\CloudVisionClient\Services;
 
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
+use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
+use Exception;
 
 class CloudVisionService
 {
@@ -44,8 +46,11 @@ class CloudVisionService
 }';
     public function __construct(private readonly PendingRequest $client){}
 
-    public function postImageAnnotate(string $pathToReceipt = ''):  Response
+    /**
+     * @throws Exception
+     */
+    public function postImageAnnotateWithRequest(ReceiptParserRequest $receiptParserRequest):  Response
     {
-        return $this->client->withBody(self::REQUEST_BODY)->send('post','images:annotate?key={key}');
+        return $this->client->withBody($receiptParserRequest->getBodyAsJson())->send('post','images:annotate?key={key}');
     }
 }

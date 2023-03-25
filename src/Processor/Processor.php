@@ -3,13 +3,33 @@
 namespace Theod\CloudVisionClient\Processor;
 
 use Theod\CloudVisionClient\Enums\ProcessorStatus;
+use Theod\CloudVisionClient\Objects\Uri;
 
 abstract class Processor
 {
     private float $start;
     private float $end;
     private float $executionDuration;
+    private Uri $sourceUri;
     private ProcessorStatus $status;
+
+
+    /**
+     * @param string $sourceUri
+     * @return void
+     */
+    public function setSourceUriToProcess(string $sourceUri): void
+    {
+        $this->sourceUri = new Uri($sourceUri);
+    }
+
+    /**
+     * @return Uri
+     */
+    public function getSourceUriToProcess(): Uri
+    {
+        return $this->sourceUri;
+    }
 
     /**
      * @return void
