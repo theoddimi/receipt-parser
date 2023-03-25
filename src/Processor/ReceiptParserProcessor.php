@@ -3,9 +3,11 @@
 namespace Theod\CloudVisionClient\Processor;
 
 use Illuminate\Http\Client\Response;
+use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\CloudVisionClient\Services\CloudVisionService;
+use Theod\ReceiptParser\Objects\Uri;
 
 class ReceiptParserProcessor extends Processor implements ReceiptParserProcessorInterface
 {
@@ -22,11 +24,14 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
     {
         $this->start();
 
+        $receiptParserRequest = new ReceiptParserRequest();
+        $receiptParserRequest->addSourceUriToBody(new Uri('gs://gainz-expensea-train/image1-0.jpg'));
+
         $this->cloudVisionResponse = $this->cloudVisionService->postImageAnnotate();
         $responseJson = $this->cloudVisionResponse->json();
 
 
-// Init variables
+        // Init variables
         $currentBlockLineY = -1;
         $yThreshold = 10;
         $symbolsMetaData = [];
@@ -34,17 +39,11 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $thresholdIndicatorForSameLine = 20;
         $mergedLines = [];
 
+        // Find orientation of blocks returned
+        $blocksOrientation = $this->receiptParserUtility->specifyBlocksOrientationFromJsonResponse($responseJson);
 
-// Find orientation of blocks returned
-        $blocksOrientation = $this->receiptParserUtility->assumeBlocksOrientationFromJsonResponse($responseJson);
-
-
-// Blocks
+        // Blocks
         $blocks = $responseJson["responses"][0]["fullTextAnnotation"]["pages"][0]["blocks"];
-
-// First line coordinates. Same as the first letter of firstblock found from the scanned document.
-        $firstSymbolBounds = $blocks[0]['paragraphs'][0]['words'][0]['symbols'][0]['boundingBox']['vertices'];
-
 
 // Start blocks looping
         foreach ($blocks as $blockKey=>$block) {

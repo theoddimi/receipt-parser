@@ -47,7 +47,7 @@ class ReceiptParserUtility
      * @param float $wordHeight
      * @return string
      */
-    public function assumeBlocksOrientationFromWordWidthAndHeight(float $wordWidth, float $wordHeight): string # TODO Return BlockOrientationObject
+    public function specifyBlocksOrientationFromWordWidthAndHeight(float $wordWidth, float $wordHeight): string # TODO Return BlockOrientationObject
     {
         if ($wordWidth > $wordHeight === true) {
             return '0d';
@@ -60,12 +60,12 @@ class ReceiptParserUtility
      * @param array $json
      * @return string
      */
-    public function assumeBlocksOrientationFromJsonResponse(array $json): string # TODO Return BlockOrientationObject
+    public function specifyBlocksOrientationFromJsonResponse(array $json): string # TODO Return BlockOrientationObject
     {
         $textAnnotationFirstBlockBoundingPolyVertices = $this->getTextAnnotationFirstBlockBoundingPolyVerticesFromJsonResponse($json);
         $wordWidth = $this->calculateWordWidthFromBoundingPolyVertices($textAnnotationFirstBlockBoundingPolyVertices);
         $wordHeight = $this->calculateWordHeightFromBoundingPolyVertices($textAnnotationFirstBlockBoundingPolyVertices);
 
-        return $this->assumeBlocksOrientationFromWordWidthAndHeight($wordWidth, $wordHeight);
+        return $this->specifyBlocksOrientationFromWordWidthAndHeight($wordWidth, $wordHeight);
     }
 }
