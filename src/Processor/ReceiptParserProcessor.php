@@ -4,6 +4,7 @@ namespace Theod\CloudVisionClient\Processor;
 
 use Illuminate\Http\Client\Response;
 use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
+use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\CloudVisionClient\Services\CloudVisionService;
@@ -23,84 +24,65 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
 
     public function run()
     {
+        // Init variables
+        $currentBlockLineY = -1;
+        $yThreshold = 30;
+        $symbolsMetaData = [];
+        $composeBlockLineDescription = [];
+        $thresholdIndicatorForSameLine = 30;
+        $mergedLines = [];
+
         $this->start();
 
         $receiptParserRequest = new ReceiptParserRequest();
         $receiptParserRequest->addSourceUriToBody($this->getSourceUriToProcess());
 
-        $this->cloudVisionResponse = $this->cloudVisionService->postImageAnnotateWithRequest($receiptParserRequest);
-        $responseJson = $this->cloudVisionResponse->json();
-
-
-        // Init variables
-        $currentBlockLineY = -1;
-        $yThreshold = 10;
-        $symbolsMetaData = [];
-        $composeBlockLineDescription = [];
-        $thresholdIndicatorForSameLine = 20;
-        $mergedLines = [];
+        $httpResponse = $this->cloudVisionService->postImageAnnotateWithRequest($receiptParserRequest);
+        $receiptParserResponse = ReceiptParserResponse::createFromHttpResponse($httpResponse);
 
         // Find orientation of blocks returned
-        $blocksOrientation = $this->receiptParserUtility->specifyBlocksOrientationFromJsonResponse($responseJson);
-
-        // Blocks
-        $blocks = $responseJson["responses"][0]["fullTextAnnotation"]["pages"][0]["blocks"];
+        $blocksOrientation = $this->receiptParserUtility->specifyBlocksOrientationFromResponse($receiptParserResponse);
+        $receiptParserResponse->setBlocksOrientation($blocksOrientation);
+        $response = $receiptParserResponse->toArray();
+        $blocks = $this->receiptParserUtility->retrieveBlocksFromDecodedResponse($response);
 
 // Start blocks looping
         foreach ($blocks as $blockKey=>$block) {
-
             $line = 0;
-            //Paragraphs
-            $paragraphs = $block['paragraphs'];
+            $paragraphs = $this->receiptParserUtility->getParagraphsFromBlock($block);
 
-            foreach ($paragraphs as $paragraphKey=>$paragraph) {
-                // Words
-                $words = $paragraph['words'];
+            foreach ($paragraphs as $paragraphKey => $paragraph) {
+                $words = $this->receiptParserUtility->getWordsFromParagraph($paragraph);
 
-                foreach ($words as $wordKey=>$word) {
-                    // Symbols
-                    $symbols = $word["symbols"];
+                foreach ($words as $wordKey => $word) {
+                    $symbols = $this->receiptParserUtility->getSymbolsFromWord($word);
 
-                    // First symbol of word of the block paragraph (assumed that a block has only one paragraph for now)
-                    $firstSymbolOfTheWord = $symbols[0]; // DO WEE NEED THIS?
-                    // Last symbol of the word
-                    $lastSymbolOfTheWord = $symbols[count($symbols)-1]; // AND THIS?
-
-                    foreach ($symbols as $symbolKey=>$symbol) {
+                    foreach ($symbols as $symbolKey => $symbol) {
                         ################ Calculate current symbol's y and check line status #########################
                         // Calculate the average of symbols' left and right boundaries y coordinates for top and bottom side
-                        if ($blocksOrientation === '0d') {
-                            $symbolTopYBoundAvg = ($symbol['boundingBox']['vertices'][0]['y'] + $symbol['boundingBox']['vertices'][1]['y']) / 2;
-                            $symbolBottomYBoundAvg = ($symbol['boundingBox']['vertices'][2]['y'] + $symbol['boundingBox']['vertices'][3]['y']) / 2;
-
-                            // Calculate the point in the middle of the top and bottom Y coordinates of the symbol
-                            $symbolMidYPoint = ($symbolTopYBoundAvg + $symbolBottomYBoundAvg) / 2;
+                        if (ReceiptParserUtility::BLOCK_ORIENTATION_ZERO_DEG === $blocksOrientation) {
+                            $symbolTopYBoundAvg = $this->receiptParserUtility->calculateTopSideYBoundAverageForSymbolAndOrientationZero($symbol);
+                            $symbolBottomYBoundAvg = $this->receiptParserUtility->calculateBottomSideYBoundAverageForSymbolAndOrientationZero($symbol);
+                            $symbolLeftXBoundAvg = $this->receiptParserUtility->calculateLeftSideXBoundAverageForSymbolAndOrientationZero($symbol);
+                            $symbolRightXBoundAvg = $this->receiptParserUtility->calculateRightSideXBoundAverageForSymbolAndOrientationZero($symbol);
                         } else {
-                            $symbolTopYBoundAvg = ($symbol['boundingBox']['vertices'][0]['x'] + $symbol['boundingBox']['vertices'][1]['x']) / 2;
-                            $symbolBottomYBoundAvg = ($symbol['boundingBox']['vertices'][2]['x'] + $symbol['boundingBox']['vertices'][3]['x']) / 2;
-
-                            // Calculate the point in the middle of the top and bottom Y coordinates of the symbol
-                            $symbolMidYPoint = ($symbolTopYBoundAvg + $symbolBottomYBoundAvg) / 2;
+                            $symbolTopYBoundAvg = $this->receiptParserUtility->calculateTopSideYBoundAverageForSymbolAndOrientationNinety($symbol);
+                            $symbolBottomYBoundAvg = $this->receiptParserUtility->calculateBottomSideYBoundAverageForSymbolAndOrientationNinety($symbol);
+                            $symbolLeftXBoundAvg = $this->receiptParserUtility->calculateLeftSideXBoundAverageForSymbolAndOrientationNinety($symbol);
+                            $symbolRightXBoundAvg = $this->receiptParserUtility->calculateRightSideXBoundAverageForSymbolAndOrientationNinety($symbol);
                         }
+
+                        // Calculate the point in the middle of the top and bottom Y coordinates of the symbol
+                        $symbolMidYPoint = $this->receiptParserUtility->calculateMiddleYPointForSymbolBoundsY(
+                            $symbolTopYBoundAvg,
+                            $symbolBottomYBoundAvg
+                        );
+
+                        $symbolMidXPoint = $this->receiptParserUtility->calculateMiddleXPointForSymbolBoundsX(
+                            $symbolLeftXBoundAvg,
+                            $symbolRightXBoundAvg
+                        );
                         ############################################################################################
-
-                        ################ Calculate current symbol x and check line status #########################
-                        // Calculate the average of symbols' left and right boundaries y coordinates for top and bottom side
-                        if ($blocksOrientation === '0d') {
-                            $symbolLeftXBoundAvg = ($symbol['boundingBox']['vertices'][0]['x'] + $symbol['boundingBox']['vertices'][3]['x']) / 2;
-                            $symbolRightXBoundAvg = ($symbol['boundingBox']['vertices'][1]['x'] + $symbol['boundingBox']['vertices'][2]['x']) / 2;
-
-                            // Calculate the point in the middle of the left and right X coordinates of the symbol
-                            $symbolMidXPoint = ($symbolLeftXBoundAvg + $symbolRightXBoundAvg) / 2;
-                        } else {
-                            $symbolLeftXBoundAvg = ($symbol['boundingBox']['vertices'][0]['y'] + $symbol['boundingBox']['vertices'][3]['y']) / 2;
-                            $symbolRightXBoundAvg = ($symbol['boundingBox']['vertices'][1]['y'] + $symbol['boundingBox']['vertices'][2]['y']) / 2;
-
-                            // Calculate the point in the middle of the left and right X coordinates of the symbol
-                            $symbolMidXPoint = ($symbolLeftXBoundAvg + $symbolRightXBoundAvg) / 2;
-                        }
-                        ############################################################################################
-
                         ################## Specify the line #############
                         if ($paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0) {
                             $currentBlockLineY = $symbolMidYPoint;

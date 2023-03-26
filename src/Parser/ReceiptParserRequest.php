@@ -11,42 +11,6 @@ class ReceiptParserRequest extends ParserRequest
      */
     private array $body;
 
-    private const REQUEST_BODY = '{
-  "requests": [
-    {
-      "image": {
-          "source": {
-              "imageUri": "gs://gainz-expensea-train/image1-0.jpg"
-          }
-      },
-      "features": [
-        {
-          "type": "DOCUMENT_TEXT_DETECTION",
-          "model":"builtin/weekly"
-        },
-      ],
-      "imageContext": {
-        "cropHintsParams": {
-            "aspectRatios": [
-             0.8,
-            1,
-            1.2
-            ]
-        },
-        "languageHints": [
-            "el", "en"
-        ],
-        "textDetectionParams": {
-            "enableTextDetectionConfidenceScore": true,
-            "advancedOcrOptions": [
-                "legacy_layout"                    
-            ],
-        },
-      }
-    }
-  ]
-}';
-
     public function __construct()
     {
         $this->body['requests'] = [
@@ -56,7 +20,7 @@ class ReceiptParserRequest extends ParserRequest
                 ],
                 'features' => [
                     [
-                        'type' => 'DOCUMENT_TEXT_DETECTION',
+                        'type' => 'TEXT_DETECTION',
                         'model' => 'builtin/weekly'
                     ]
                 ],
@@ -68,6 +32,16 @@ class ReceiptParserRequest extends ParserRequest
                     'textDetectionParams' => [
                         'enableTextDetectionConfidenceScore' => true,
                         'advancedOcrOptions' => ['legacy_layout']
+                    ],
+                    'latLongRect' => [
+                        'minLatLng' => [
+                            "latitude" => 37.4219999,
+                            "longitude" => -122.0840575
+                        ],
+                        'maxLatLng' => [
+                            "latitude" => 37.4226111,
+                            "longitude" => -122.0827935
+                        ]
                     ]
                 ]
             ]

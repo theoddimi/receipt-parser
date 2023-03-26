@@ -2,11 +2,34 @@
 
 namespace Theod\CloudVisionClient\Parser;
 
+use Illuminate\Http\Client\Response;
+
 class ReceiptParserResponse extends ParserResponse
 {
-//    public static function createFromJsonResponse(string $jsonResponse)
-//    {
-//        $receiptParser = new self();
-//        $receiptParser->jsonBody = $jsonResponse;
-//    }
+    private string $blocksOrientation;
+
+    /**
+     * @param Response $response
+     * @return ReceiptParserResponse
+     */
+    public static function createFromHttpResponse(Response $response): self
+    {
+        return new self($response);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBlocksOrientation(): string
+    {
+        return $this->blocksOrientation;
+    }
+
+    /**
+     * @param string $blocksOrientation
+     */
+    public function setBlocksOrientation(string $blocksOrientation): void
+    {
+        $this->blocksOrientation = $blocksOrientation;
+    }
 }
