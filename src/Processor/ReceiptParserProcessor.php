@@ -3,6 +3,9 @@
 namespace Theod\CloudVisionClient\Processor;
 
 use Illuminate\Http\Client\Response;
+use Theod\CloudVisionClient\Builder\BlockLineBuilder;
+use Theod\CloudVisionClient\Builder\Line;
+use Theod\CloudVisionClient\Builder\WordBuilder;
 use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
 use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
@@ -25,7 +28,6 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
     public function run()
     {
         // Init variables
-        $currentBlockLineY = -1;
         $yThreshold = 30;
         $symbolsMetaData = [];
         $composeBlockLineDescription = [];
@@ -46,8 +48,10 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $response = $receiptParserResponse->toArray();
         $blocks = $this->receiptParserUtility->retrieveBlocksFromDecodedResponse($response);
 
-// Start blocks looping
+        // Start blocks looping
         foreach ($blocks as $blockKey=>$block) {
+            $blockLine = new BlockLineBuilder();
+            $blockLine->setBlock($block);
             $line = 0;
             $paragraphs = $this->receiptParserUtility->getParagraphsFromBlock($block);
 
@@ -55,6 +59,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                 $words = $this->receiptParserUtility->getWordsFromParagraph($paragraph);
 
                 foreach ($words as $wordKey => $word) {
+                    $blockLine->setWord($word);
                     $symbols = $this->receiptParserUtility->getSymbolsFromWord($word);
 
                     foreach ($symbols as $symbolKey => $symbol) {
@@ -82,26 +87,31 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                             $symbolLeftXBoundAvg,
                             $symbolRightXBoundAvg
                         );
-                        ############################################################################################
-                        ################## Specify the line #############
+
+                        ################## Compose block line words, symbol by symbol #############
                         if ($paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0) {
-                            $currentBlockLineY = $symbolMidYPoint;
-                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => true, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
-                        } else if ($symbolMidYPoint > ($currentBlockLineY + $yThreshold)) {
-                            $line++;
-                            $currentBlockLineY = $symbolMidYPoint;
-                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
+                            $line = new Line();
+                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
+//                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
+                        } else if ($symbolMidYPoint > ($symbolMidYPoint + $yThreshold)) {
+                            $line = new Line();
+                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
+//                            $line++;
+//                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
                         } else {
-                            $symbolsMetaData[$blockKey][$line][count($symbolsMetaData[$blockKey][$line]) - 1]["isLastSymbolOfBlockLine"] = false;
-                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => false, "isLastSymbolOfBlockLine" => true];
+                            $blockLine->addSymbolToExistingLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
+//                            $symbolsMetaData[$blockKey][$line][count($symbolsMetaData[$blockKey][$line]) - 1]["isLastSymbolOfBlockLine"] = false;
+//                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => false, "isLastSymbolOfBlockLine" => true];
                         }
                     }
                 }
             }
-
+# TODO CONTINUE REFACTORING
             // COMPOSE THE SENTENCES BY SYMBOLS AND SYMBOL'S METADATA PER BLOCK //
-            $line = 0;
-            foreach ($symbolsMetaData[$blockKey] as $line=>$blockLines) {
+//            $line = 0;
+
+//            foreach ($symbolsMetaData[$blockKey] as $line=>$blockLines) {
+            foreach ($blockLine->getLines() as $line=>$blockLines) {
                 $blockLineStartY = null;
                 $blockLineEndY = null;
                 $blockLineStartX = null;
