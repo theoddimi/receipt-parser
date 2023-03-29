@@ -4,9 +4,9 @@ namespace Theod\CloudVisionClient\Builder;
 
 class BlockLineBuilder
 {
-    private array $block;
-    private array $lines;
-    private array $word;
+    public array $block;
+    public array $word;
+    public array $lines;
 
     /**
      * @return array
@@ -55,32 +55,37 @@ class BlockLineBuilder
     {
         $this->word = $word;
     }
+//
+//    /**
+//     * @param Line $line
+//     * @param array $symbol
+//     * @param int $symbolKey
+//     * @param float $symbolMidYPoint
+//     * @param float $symbolMidXPoint
+//     * @return void
+//     */
+//    public function addNewLine(Line $line, array $symbol, int $symbolKey, float $symbolMidYPoint, float $symbolMidXPoint): void
+//    {
+//        $line->pushContent(["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true]);
+//        $this->lines[] = $line;
+//    }
+//
+//    /**
+//     * @param Line $line
+//     * @param array $symbol
+//     * @param int $symbolKey
+//     * @param float $symbolMidYPoint
+//     * @param float $symbolMidXPoint
+//     * @return void
+//     */
+//    public function addSymbolToExistingLine(Line $line, array $symbol, int $symbolKey, float $symbolMidYPoint, float $symbolMidXPoint): void
+//    {
+//        $this->lines[count($this->lines) - 1]["isLastSymbolOfBlockLine"] = false;
+//        $line->pushContent(["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => false, "isLastSymbolOfBlockLine" => true]);
+//    }
 
-    /**
-     * @param Line $line
-     * @param array $symbol
-     * @param int $symbolKey
-     * @param float $symbolMidYPoint
-     * @param float $symbolMidXPoint
-     * @return void
-     */
-    public function addSymbolToNewLine(Line $line, array $symbol, int $symbolKey, float $symbolMidYPoint, float $symbolMidXPoint): void
+    public function addLine(Line $line)
     {
-        $line->pushContent(["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true]);
         $this->lines[] = $line;
-    }
-
-    /**
-     * @param Line $line
-     * @param array $symbol
-     * @param int $symbolKey
-     * @param float $symbolMidYPoint
-     * @param float $symbolMidXPoint
-     * @return void
-     */
-    public function addSymbolToExistingLine(Line $line, array $symbol, int $symbolKey, float $symbolMidYPoint, float $symbolMidXPoint): void
-    {
-        $this->lines[count($this->lines) - 1]["isLastSymbolOfBlockLine"] = false;
-        $line->pushContent(["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => false, "isLastSymbolOfBlockLine" => true]);
     }
 }

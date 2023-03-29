@@ -5,6 +5,23 @@ namespace Theod\CloudVisionClient\Builder;
 class Line
 {
     private array $content;
+    public Symbol $symbol;
+
+    /**
+     * @return Symbol
+     */
+    public function getSymbol(): Symbol
+    {
+        return $this->symbol;
+    }
+
+    /**
+     * @param Symbol $symbol
+     */
+    public function setSymbol(Symbol $symbol): void
+    {
+        $this->symbol = $symbol;
+    }
 
     /**
      * @return array
@@ -22,7 +39,7 @@ class Line
         $this->content = $content;
     }
 
-    public function pushContent(array $content)
+    public function pushContent(Symbol $content)
     {
         $this->content[] = $content;
     }

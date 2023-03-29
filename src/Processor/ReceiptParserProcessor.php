@@ -5,6 +5,7 @@ namespace Theod\CloudVisionClient\Processor;
 use Illuminate\Http\Client\Response;
 use Theod\CloudVisionClient\Builder\BlockLineBuilder;
 use Theod\CloudVisionClient\Builder\Line;
+use Theod\CloudVisionClient\Builder\Symbol;
 use Theod\CloudVisionClient\Builder\WordBuilder;
 use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
 use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
@@ -89,20 +90,39 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                         );
 
                         ################## Compose block line words, symbol by symbol #############
+                        $symbol = new Symbol();
+                        $symbol->setText($symbol['text']);
+                        $symbol->setStartOfTheWord( 0 === $symbolKey);
+                        $symbol->setSymbolY($symbolMidYPoint);
+                        $symbol->setSymbolX($symbolMidXPoint);
+                        $symbol->setIsLastSymbolOfBlockLine(true);
+
                         if ($paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0) {
+                            $symbol->setIsFirstSymbolOfBlockLine(true);
+
                             $line = new Line();
-                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
+                            $line->pushContent($symbol);
+                            $blockLine->addLine($line);
+//                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
 //                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
                         } else if ($symbolMidYPoint > ($symbolMidYPoint + $yThreshold)) {
+                            $symbol->setIsFirstSymbolOfBlockLine(true);
+
                             $line = new Line();
-                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
+                            $line->pushContent($symbol);
+                            $blockLine->addLine($line);
+//                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
 //                            $line++;
 //                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
                         } else {
-                            $blockLine->addSymbolToExistingLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
+                            $symbol->setIsFirstSymbolOfBlockLine(false);
+
+                            $line->pushContent($symbol);
+//                            $blockLine->addSymbolToExistingLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
 //                            $symbolsMetaData[$blockKey][$line][count($symbolsMetaData[$blockKey][$line]) - 1]["isLastSymbolOfBlockLine"] = false;
 //                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => false, "isLastSymbolOfBlockLine" => true];
                         }
+
                     }
                 }
             }
