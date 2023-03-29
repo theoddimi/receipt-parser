@@ -90,34 +90,34 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                         );
 
                         ################## Compose block line words, symbol by symbol #############
-                        $symbol = new Symbol();
-                        $symbol->setText($symbol['text']);
-                        $symbol->setStartOfTheWord( 0 === $symbolKey);
-                        $symbol->setSymbolY($symbolMidYPoint);
-                        $symbol->setSymbolX($symbolMidXPoint);
-                        $symbol->setIsLastSymbolOfBlockLine(true);
+                        $symbolMeta = new Symbol();
+                        $symbolMeta->setText($symbol['text']);
+                        $symbolMeta->setStartOfTheWord( 0 === $symbolKey);
+                        $symbolMeta->setSymbolY($symbolMidYPoint);
+                        $symbolMeta->setSymbolX($symbolMidXPoint);
+                        $symbolMeta->setIsLastSymbolOfBlockLine(true);
 
                         if ($paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0) {
-                            $symbol->setIsFirstSymbolOfBlockLine(true);
+                            $symbolMeta->setIsFirstSymbolOfBlockLine(true);
 
                             $line = new Line();
-                            $line->pushContent($symbol);
+                            $line->pushSymbol($symbolMeta);
                             $blockLine->addLine($line);
 //                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
 //                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
                         } else if ($symbolMidYPoint > ($symbolMidYPoint + $yThreshold)) {
-                            $symbol->setIsFirstSymbolOfBlockLine(true);
+                            $symbolMeta->setIsFirstSymbolOfBlockLine(true);
 
                             $line = new Line();
-                            $line->pushContent($symbol);
+                            $line->pushSymbol($symbolMeta);
                             $blockLine->addLine($line);
 //                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
 //                            $line++;
 //                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
                         } else {
-                            $symbol->setIsFirstSymbolOfBlockLine(false);
+                            $symbolMeta->setIsFirstSymbolOfBlockLine(false);
 
-                            $line->pushContent($symbol);
+                            $line->pushSymbol($symbolMeta);
 //                            $blockLine->addSymbolToExistingLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
 //                            $symbolsMetaData[$blockKey][$line][count($symbolsMetaData[$blockKey][$line]) - 1]["isLastSymbolOfBlockLine"] = false;
 //                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => false, "isLastSymbolOfBlockLine" => true];
@@ -131,33 +131,36 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
 //            $line = 0;
 
 //            foreach ($symbolsMetaData[$blockKey] as $line=>$blockLines) {
-            foreach ($blockLine->getLines() as $line=>$blockLines) {
+            foreach ($blockLine->getLines() as $lineKey=>$line) {
                 $blockLineStartY = null;
                 $blockLineEndY = null;
                 $blockLineStartX = null;
                 $blockLineEndX = null;
 
-                foreach($blockLines as $blockLineSymbol) {
+                foreach($line->getContent() as $blockLineSymbol) {
                     // Keep track of start and end of line coordinates
-                    if (true === $blockLineSymbol['isFirstSymbolOfBlockLine'] && null === $blockLineStartY) {
-                        $blockLineStartY = $blockLineSymbol["symbolY"];
-                        $blockLineStartX = $blockLineSymbol["symbolX"];
+                    /**
+                     * @var Symbol $blockLineSymbol
+                     */
+                    if (true === $blockLineSymbol->isFirstSymbolOfBlockLine() && null === $blockLineStartY) {
+                        $blockLineStartY = $blockLineSymbol->getSymbolY();
+                        $blockLineStartX = $blockLineSymbol->getSymbolX();
                     }
 
-                    if (true === $blockLineSymbol['isLastSymbolOfBlockLine'] && null === $blockLineEndY) {
-                        $blockLineEndY = $blockLineSymbol["symbolY"];
-                        $blockLineEndX = $blockLineSymbol["symbolX"];
+                    if (true === $blockLineSymbol->isLastSymbolOfBlockLine() && null === $blockLineEndY) {
+                        $blockLineEndY = $blockLineSymbol->getSymbolY();
+                        $blockLineEndX = $blockLineSymbol->getSymbolX();
                     }
 //                $composeBlockDescription[$blockKey][$line] = isset($composeBlockDescription[$blockKey][$line]) ? $composeBlockDescription[$blockKey][$line] . $blockLineSymbol["text"] : $blockLineSymbol["text"];
 
-                    if (isset($composeBlockLineDescription[$blockKey][$line])) {
-                        if (true === $blockLineSymbol['startOfTheWord'] && false === $blockLineSymbol['isFirstSymbolOfBlockLine']) {
-                            $composeBlockLineDescription[$blockKey][$line] = ['description' => $composeBlockLineDescription[$blockKey][$line]['description'] . " " . $blockLineSymbol["text"], 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
+                    if (isset($composeBlockLineDescription[$blockKey][$lineKey])) {
+                        if (true === $blockLineSymbol->isStartOfTheWord() && false === $blockLineSymbol->isFirstSymbolOfBlockLine()) {
+                            $composeBlockLineDescription[$blockKey][$lineKey] = ['description' => $composeBlockLineDescription[$blockKey][$lineKey]['description'] . " " . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
                         } else {
-                            $composeBlockLineDescription[$blockKey][$line] = ['description' => $composeBlockLineDescription[$blockKey][$line]['description'] . $blockLineSymbol["text"], 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
+                            $composeBlockLineDescription[$blockKey][$lineKey] = ['description' => $composeBlockLineDescription[$blockKey][$lineKey]['description'] . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
                         }
                     } else {
-                        $composeBlockLineDescription[$blockKey][$line] = ['description' => $blockLineSymbol["text"], 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
+                        $composeBlockLineDescription[$blockKey][$lineKey] = ['description' => $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
                     }
                 }
             }
@@ -227,11 +230,11 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $linesYCoordinate = array_column($mergedLines, 'lineY');
         array_multisort($linesYCoordinate, SORT_ASC, $mergedLines);
 
-
+        echo '<pre>';
         foreach ($mergedLines as $mergedLine) {
             echo $mergedLine['text'] . "\n";
         }
-
+        echo '</pre>';
 
         $end_time = microtime(true);
 // Calculating the script execution time

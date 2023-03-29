@@ -4,8 +4,10 @@ namespace Theod\CloudVisionClient\Builder;
 
 class Line
 {
-    private array $content;
+    private array $content = [];
     public Symbol $symbol;
+
+    public function __construct() {}
 
     /**
      * @return Symbol
@@ -39,8 +41,16 @@ class Line
         $this->content = $content;
     }
 
-    public function pushContent(Symbol $content)
+    public function pushSymbol(Symbol $content)
     {
+        if (count($this->content) > 0) {
+            $lastSymbol = $this->content[count($this->content) - 1];
+            /**
+             * @var Symbol $lastSymbol
+             */
+            $lastSymbol->setIsLastSymbolOfBlockLine(false);
+        }
+
         $this->content[] = $content;
     }
 }
