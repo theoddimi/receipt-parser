@@ -4,6 +4,7 @@ namespace Theod\CloudVisionClient\Processor;
 
 use Illuminate\Http\Client\Response;
 use Theod\CloudVisionClient\Builder\BlockLineBuilder;
+use Theod\CloudVisionClient\Builder\BlockLineCompose;
 use Theod\CloudVisionClient\Builder\Line;
 use Theod\CloudVisionClient\Builder\Symbol;
 use Theod\CloudVisionClient\Builder\WordBuilder;
@@ -135,11 +136,15 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
 //            $line = 0;
 
 //            foreach ($symbolsMetaData[$blockKey] as $line=>$blockLines) {
+
         foreach ($blockLine->getLines() as $lineKey=>$line) {
+
             $blockLineStartY = null;
             $blockLineEndY = null;
             $blockLineStartX = null;
             $blockLineEndX = null;
+
+            $blockLineCompose = new BlockLineCompose();
 
             foreach($line->getContent() as $blockLineSymbol) {
                 // Keep track of start and end of line coordinates
@@ -156,16 +161,26 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                     $blockLineEndX = $blockLineSymbol->getSymbolX();
                 }
 
-                if (isset($composeBlockLineDescription[$lineKey])) {
+//                if (isset($composeBlockLineDescription[$lineKey])) {
+//                if (count($blockLine->getLinesComposed()) > 0) {
                     if (true === $blockLineSymbol->isStartOfTheWord() && false === $blockLineSymbol->isFirstSymbolOfBlockLine()) {
-                        $composeBlockLineDescription[$lineKey] = ['description' => $composeBlockLineDescription[$lineKey]['description'] . " " . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
+                        $blockLineCompose->setDescription($blockLineCompose->getDescription() . " " . $blockLineSymbol->getText());
+//                      $composeBlockLineDescription[$lineKey] = ['description' => $composeBlockLineDescription[$lineKey]['description'] . " " . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
                     } else {
-                        $composeBlockLineDescription[$lineKey] = ['description' => $composeBlockLineDescription[$lineKey]['description'] . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
+                        $blockLineCompose->setDescription($blockLineCompose->getDescription() . $blockLineSymbol->getText());
+//                        $composeBlockLineDescription[$lineKey] = ['description' => $composeBlockLineDescription[$lineKey]['description'] . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
                     }
-                } else {
-                    $composeBlockLineDescription[$lineKey] = ['description' => $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
-                }
+//                } else {
+//                    $blockLineCompose->setDescription($blockLineSymbol->getText());
+                    $blockLineCompose->setBlockLineStartY($blockLineStartY);
+                    $blockLineCompose->setBlockLineEndY($blockLineEndY);
+                    $blockLineCompose->setBlockLineStartX($blockLineStartX);
+                    $blockLineCompose->setBlockLineEndX($blockLineEndX);
+
+//                    $composeBlockLineDescription[$lineKey] = ['description' => $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
+//                }
             }
+            $blockLine->addLineComposed($blockLineCompose);
         }
 
 

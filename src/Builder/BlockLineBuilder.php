@@ -7,6 +7,7 @@ class BlockLineBuilder
     public array $block;
     public array $word;
     public array $lines;
+    public array $linesComposed;
 
     /**
      * @return array
@@ -55,6 +56,24 @@ class BlockLineBuilder
     {
         $this->word = $word;
     }
+
+    /**
+     * @return array
+     */
+    public function getLinesComposed(): array
+    {
+        return $this->linesComposed;
+    }
+
+    /**
+     * @param array $linesComposed
+     */
+    public function setLinesComposed(array $linesComposed): void
+    {
+        $this->linesComposed = $linesComposed;
+    }
+
+    
 //
 //    /**
 //     * @param Line $line
@@ -87,5 +106,10 @@ class BlockLineBuilder
     public function addLine(Line $line)
     {
         $this->lines[] = $line;
+    }
+
+    public function addLineComposed(BlockLineCompose $lineCompose)
+    {
+        $this->linesComposed[] = $lineCompose;
     }
 }
