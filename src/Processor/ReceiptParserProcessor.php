@@ -34,6 +34,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $composeBlockLineDescription = [];
         $thresholdIndicatorForSameLine = 30;
         $mergedLines = [];
+        $currentBlockLineY = -1;
 
         $this->start();
 
@@ -98,6 +99,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                         $symbolMeta->setIsLastSymbolOfBlockLine(true);
 
                         if ($paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0) {
+                            $currentBlockLineY = $symbolMidYPoint;
                             $symbolMeta->setIsFirstSymbolOfBlockLine(true);
 
                             $line = new Line();
@@ -105,7 +107,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                             $blockLine->addLine($line);
 //                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
 //                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
-                        } else if ($symbolMidYPoint > ($symbolMidYPoint + $yThreshold)) {
+                        } else if ($symbolMidYPoint > ($currentBlockLineY + $yThreshold)) {
                             $symbolMeta->setIsFirstSymbolOfBlockLine(true);
 
                             $line = new Line();
