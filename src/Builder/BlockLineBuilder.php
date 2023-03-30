@@ -73,7 +73,7 @@ class BlockLineBuilder
         $this->linesComposed = $linesComposed;
     }
 
-    
+
 //
 //    /**
 //     * @param Line $line

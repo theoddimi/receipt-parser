@@ -4,14 +4,36 @@ namespace Theod\CloudVisionClient\Builder;
 
 class BlockLineCompose
 {
-   private string $description = '';
-   private float $blockLineStartY;
-   private float $blockLineEndY;
-   private float $blockLineStartX;
-   private float $blockLineEndX;
+    /**
+     * @var string
+     */
+    private string $description = '';
+
+    /**
+     * @var float|null
+     */
+    private ?float $blockLineStartY;
+
+    /**
+     * @var float|null
+     */
+    private ?float $blockLineEndY;
+
+    /**
+     * @var float|null
+     */
+    private ?float $blockLineStartX;
+
+    /**
+     * @var float|null
+     */
+    private ?float $blockLineEndX;
 
 //   private array $composed;
 
+    /**
+     *
+     */
     public function __construct() {}
 
     /**
@@ -31,65 +53,65 @@ class BlockLineCompose
     }
 
     /**
-     * @return float
+     * @return float|null
      */
-    public function getBlockLineStartY(): float
+    public function getBlockLineStartY(): ?float
     {
         return $this->blockLineStartY;
     }
 
     /**
-     * @param float $blockLineStartY
+     * @param float|null $blockLineStartY
      */
-    public function setBlockLineStartY(float $blockLineStartY): void
+    public function setBlockLineStartY(?float $blockLineStartY): void
     {
         $this->blockLineStartY = $blockLineStartY;
     }
 
     /**
-     * @return float
+     * @return float|null
      */
-    public function getBlockLineEndY(): float
+    public function getBlockLineEndY(): ?float
     {
         return $this->blockLineEndY;
     }
 
     /**
-     * @param float $blockLineEndY
+     * @param float|null $blockLineEndY
      */
-    public function setBlockLineEndY(float $blockLineEndY): void
+    public function setBlockLineEndY(?float $blockLineEndY): void
     {
         $this->blockLineEndY = $blockLineEndY;
     }
 
     /**
-     * @return float
+     * @return float|null
      */
-    public function getBlockLineStartX(): float
+    public function getBlockLineStartX(): ?float
     {
         return $this->blockLineStartX;
     }
 
     /**
-     * @param float $blockLineStartX
+     * @param float|null $blockLineStartX
      */
-    public function setBlockLineStartX(float $blockLineStartX): void
+    public function setBlockLineStartX(?float $blockLineStartX): void
     {
         $this->blockLineStartX = $blockLineStartX;
     }
 
     /**
-     * @return float
+     * @return float|null
      */
-    public function getBlockLineEndX(): float
+    public function getBlockLineEndX(): ?float
     {
         return $this->blockLineEndX;
     }
 
     /**
-     * @param float $blockLineEndX
+     * @param float|null $blockLineEndX
      */
-    public function setBlockLineEndX(float $blockLineEndX): void
+    public function setBlockLineEndX(?float $blockLineEndX): void
     {
         $this->blockLineEndX = $blockLineEndX;
     }
