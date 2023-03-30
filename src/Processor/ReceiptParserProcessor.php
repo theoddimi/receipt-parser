@@ -94,7 +94,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                         ################## Compose block line words, symbol by symbol #############
                         $symbolMeta = new Symbol();
                         $symbolMeta->setText($symbol['text']);
-                        $symbolMeta->setStartOfTheWord( 0 === $symbolKey);
+                        $symbolMeta->setStartOfTheWord(0 === $symbolKey);
                         $symbolMeta->setSymbolY($symbolMidYPoint);
                         $symbolMeta->setSymbolX($symbolMidXPoint);
                         $symbolMeta->setIsLastSymbolOfBlockLine(true);
@@ -129,45 +129,45 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                     }
                 }
             }
+        }
 # TODO CONTINUE REFACTORING
             // COMPOSE THE SENTENCES BY SYMBOLS AND SYMBOL'S METADATA PER BLOCK //
 //            $line = 0;
 
 //            foreach ($symbolsMetaData[$blockKey] as $line=>$blockLines) {
-            foreach ($blockLine->getLines() as $lineKey=>$line) {
-                $blockLineStartY = null;
-                $blockLineEndY = null;
-                $blockLineStartX = null;
-                $blockLineEndX = null;
+        foreach ($blockLine->getLines() as $lineKey=>$line) {
+            $blockLineStartY = null;
+            $blockLineEndY = null;
+            $blockLineStartX = null;
+            $blockLineEndX = null;
 
-                foreach($line->getContent() as $blockLineSymbol) {
-                    // Keep track of start and end of line coordinates
-                    /**
-                     * @var Symbol $blockLineSymbol
-                     */
-                    if (true === $blockLineSymbol->isFirstSymbolOfBlockLine() && null === $blockLineStartY) {
-                        $blockLineStartY = $blockLineSymbol->getSymbolY();
-                        $blockLineStartX = $blockLineSymbol->getSymbolX();
-                    }
+            foreach($line->getContent() as $blockLineSymbol) {
+                // Keep track of start and end of line coordinates
+                /**
+                 * @var Symbol $blockLineSymbol
+                 */
+                if (true === $blockLineSymbol->isFirstSymbolOfBlockLine() && null === $blockLineStartY) {
+                    $blockLineStartY = $blockLineSymbol->getSymbolY();
+                    $blockLineStartX = $blockLineSymbol->getSymbolX();
+                }
 
-                    if (true === $blockLineSymbol->isLastSymbolOfBlockLine() && null === $blockLineEndY) {
-                        $blockLineEndY = $blockLineSymbol->getSymbolY();
-                        $blockLineEndX = $blockLineSymbol->getSymbolX();
-                    }
-//                $composeBlockDescription[$blockKey][$line] = isset($composeBlockDescription[$blockKey][$line]) ? $composeBlockDescription[$blockKey][$line] . $blockLineSymbol["text"] : $blockLineSymbol["text"];
+                if (true === $blockLineSymbol->isLastSymbolOfBlockLine() && null === $blockLineEndY) {
+                    $blockLineEndY = $blockLineSymbol->getSymbolY();
+                    $blockLineEndX = $blockLineSymbol->getSymbolX();
+                }
 
-                    if (isset($composeBlockLineDescription[$blockKey][$lineKey])) {
-                        if (true === $blockLineSymbol->isStartOfTheWord() && false === $blockLineSymbol->isFirstSymbolOfBlockLine()) {
-                            $composeBlockLineDescription[$blockKey][$lineKey] = ['description' => $composeBlockLineDescription[$blockKey][$lineKey]['description'] . " " . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
-                        } else {
-                            $composeBlockLineDescription[$blockKey][$lineKey] = ['description' => $composeBlockLineDescription[$blockKey][$lineKey]['description'] . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
-                        }
+                if (isset($composeBlockLineDescription[$lineKey])) {
+                    if (true === $blockLineSymbol->isStartOfTheWord() && false === $blockLineSymbol->isFirstSymbolOfBlockLine()) {
+                        $composeBlockLineDescription[$lineKey] = ['description' => $composeBlockLineDescription[$lineKey]['description'] . " " . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
                     } else {
-                        $composeBlockLineDescription[$blockKey][$lineKey] = ['description' => $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
+                        $composeBlockLineDescription[$lineKey] = ['description' => $composeBlockLineDescription[$lineKey]['description'] . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
                     }
+                } else {
+                    $composeBlockLineDescription[$lineKey] = ['description' => $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
                 }
             }
         }
+
 
 // COMPOSE FULL LINES AMONG BLOCKS BY LINES COMPOSED PREVIOUSLY PER BLOCK //
         $leftOvers = [];
