@@ -187,56 +187,62 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
 // COMPOSE FULL LINES AMONG BLOCKS BY LINES COMPOSED PREVIOUSLY PER BLOCK //
         $leftOvers = [];
         $notFound = true;
-        foreach ($composeBlockLineDescription as $blockKeyA=>$blockA) {
-            foreach ($blockA as $lineDataAKey=>$lineDataA) {
-                $counter = 0;
-                $lineMatchFound = false;
+        foreach ($blockLine->getLinesComposed() as $blockKeyA=>$blockA) {
+//            dd($blockA);
+//            foreach ($blockA as $lineDataAKey=>$lineDataA) {
+            $counter = 0;
+            $lineMatchFound = false;
 
-                while ($counter < count($composeBlockLineDescription)) {
-                    if ($blockKeyA === $counter) {
-                        $counter++;
-                        continue;
-                    }
+            while ($counter < count($blockLine->getLinesComposed())) {
+                if ($blockKeyA === $counter) {
+                    $counter++;
+                    continue;
+                }
 
-                    foreach ($composeBlockLineDescription[$counter] as $lineDataBKey => $lineDataB) {
-                        if (abs($lineDataA["blockLineStartY"] - $lineDataB["blockLineEndY"]) <= $thresholdIndicatorForSameLine) { // Means  that A is in same line with B
-                            if ($blocksOrientation === '0d') {
-                                if ($lineDataA["blockLineStartX"] > $lineDataB["blockLineStartX"]) {
-                                    $lineMatchFound = true;
-                                    $notFound = false;
-                                    $mergedLines[] = ['text' => $lineDataB["description"] . " " . $lineDataA["description"], 'lineY' => ($lineDataA["blockLineStartY"] + $lineDataB["blockLineEndY"]) / 2, 'lineStartX' => $lineDataB["blockLineStartX"], 'lineEndX' => $lineDataA["blockLineEndX"]];
-                                    unset($composeBlockLineDescription[$counter][$lineDataBKey]);
-                                    unset($composeBlockLineDescription[$blockKeyA][$lineDataAKey]);
-                                } else {
-                                    $lineMatchFound = true;
-                                    $notFound = false;
-                                    $mergedLines[] = ['text' => $lineDataA["description"] . " " . $lineDataB["description"], 'lineY' => ($lineDataA["blockLineStartY"] + $lineDataB["blockLineEndY"]) / 2, 'lineStartX' => $lineDataA["blockLineStartX"], 'lineEndX' => $lineDataB["blockLineEndX"]];
-                                    unset($composeBlockLineDescription[$counter][$lineDataBKey]);
-                                    unset($composeBlockLineDescription[$blockKeyA][$lineDataAKey]);
-                                }
-                            } else {
-                                if ($lineDataA["blockLineStartX"] > $lineDataB["blockLineStartX"]) {
-                                    $lineMatchFound = true;
-                                    $notFound = false;
-                                    $mergedLines[] = ['text' =>  $lineDataA["description"] . " " . $lineDataB["description"], 'lineY' => ($lineDataA["blockLineStartY"] + $lineDataB["blockLineEndY"]) / 2, 'lineStartX' => $lineDataB["blockLineStartX"], 'lineEndX' => $lineDataA["blockLineEndX"]];
-                                    unset($composeBlockLineDescription[$counter][$lineDataBKey]);
-                                    unset($composeBlockLineDescription[$blockKeyA][$lineDataAKey]);
-                                } else {
-                                    $lineMatchFound = true;
-                                    $notFound = false;
-                                    $mergedLines[] = ['text' => $lineDataB["description"] . " " . $lineDataA["description"], 'lineY' => ($lineDataA["blockLineStartY"] + $lineDataB["blockLineEndY"]) / 2, 'lineStartX' => $lineDataA["blockLineStartX"], 'lineEndX' => $lineDataB["blockLineEndX"]];
-                                    unset($composeBlockLineDescription[$counter][$lineDataBKey]);
-                                    unset($composeBlockLineDescription[$blockKeyA][$lineDataAKey]);
-                                }
-                            }
+                $blockB = $blockLine->getLinesComposed()[$counter];
+//                    foreach ($blockLine->getLinesComposed()[$counter] as $blockKeyB=>$blockB) {
+                /**
+                 * @var BlockLineCompose $blockA
+                 * @var BlockLineCompose $blockB
+                 */
+                if (abs($blockA->getBlockLineStartY() - $blockB->getBlockLineEndY()) <= $thresholdIndicatorForSameLine) { // Means  that A is in same line with B
+                    if ($blocksOrientation === '0d') {
+                        if ($blockA->getBlockLineStartX() > $blockB->getBlockLineStartX()) {
+                            $lineMatchFound = true;
+                            $notFound = false;
+                            $mergedLines[] = ['text' => $blockB->getDescription() . " " . $blockA->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2, 'lineStartX' => $blockB->getBlockLineStartX(), 'lineEndX' => $blockA->getBlockLineEndX()];
+                            unset($blockLine->getLinesComposed()[$counter]);
+                            unset($blockLine->getLinesComposed()[$blockKeyA]);
+                        } else {
+                            $lineMatchFound = true;
+                            $notFound = false;
+                            $mergedLines[] = ['text' => $blockA->getDescription() . " " . $blockB->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2, 'lineStartX' => $blockA->getBlockLineStartX(), 'lineEndX' => $blockB->getBlockLineEndX()];
+                            unset($blockLine->getLinesComposed()[$counter]);
+                            unset($blockLine->getLinesComposed()[$blockKeyA]);
+                        }
+                    } else {
+                        if ($blockA->getBlockLineStartX() > $blockB->getBlockLineStartX()) {
+                            $lineMatchFound = true;
+                            $notFound = false;
+                            $mergedLines[] = ['text' =>  $blockA->getDescription() . " " . $blockB->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2, 'lineStartX' => $blockB->getBlockLineStartX(), 'lineEndX' => $blockA->getBlockLineEndX()];
+                            unset($blockLine->getLinesComposed()[$counter]);
+                            unset($blockLine->getLinesComposed()[$blockKeyA]);
+                        } else {
+                            $lineMatchFound = true;
+                            $notFound = false;
+                            $mergedLines[] = ['text' => $blockB->getDescription() . " " . $blockA->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2, 'lineStartX' => $blockA->getBlockLineStartX(), 'lineEndX' => $blockB->getBlockLineEndX()];
+                            unset($blockLine->getLinesComposed()[$counter]);
+                            unset($blockLine->getLinesComposed()[$blockKeyA]);
                         }
                     }
-                    $counter++;
                 }
+//                    }
+                $counter++;
             }
+//            }
         }
-
-        foreach ($composeBlockLineDescription as $blockKeyA=>$blockA) {
+        dd($mergedLines);
+        foreach ($blockLine->getLinesComposed() as $blockKeyA=>$blockA) {
             if (count($blockA) > 0) {
                 foreach ($blockA as $lineDataAKey=>$lineDataA) {
                     $mergedLines[] = ['text' => $lineDataA["description"], 'lineY' => ($lineDataA["blockLineStartY"] + $lineDataA["blockLineEndY"]) / 2, 'lineStartX' => $lineDataA["blockLineStartX"], 'lineEndX' => $lineDataA["blockLineEndX"]];
