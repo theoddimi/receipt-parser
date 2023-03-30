@@ -50,9 +50,10 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $response = $receiptParserResponse->toArray();
         $blocks = $this->receiptParserUtility->retrieveBlocksFromDecodedResponse($response);
 
+        $blockLine = new BlockLineBuilder();
+
         // Start blocks looping
         foreach ($blocks as $blockKey=>$block) {
-            $blockLine = new BlockLineBuilder();
             $blockLine->setBlock($block);
             $line = 0;
             $paragraphs = $this->receiptParserUtility->getParagraphsFromBlock($block);
@@ -109,7 +110,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
 //                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
                         } else if ($symbolMidYPoint > ($currentBlockLineY + $yThreshold)) {
                             $symbolMeta->setIsFirstSymbolOfBlockLine(true);
-
+                            $currentBlockLineY = $symbolMidYPoint;
                             $line = new Line();
                             $line->pushSymbol($symbolMeta);
                             $blockLine->addLine($line);
