@@ -107,36 +107,23 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                             $line = new Line();
                             $line->pushSymbol($symbolMeta);
                             $blockLine->addLine($line);
-//                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
-//                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
                         } else if ($symbolMidYPoint > ($currentBlockLineY + $yThreshold)) {
                             $symbolMeta->setIsFirstSymbolOfBlockLine(true);
                             $currentBlockLineY = $symbolMidYPoint;
                             $line = new Line();
                             $line->pushSymbol($symbolMeta);
                             $blockLine->addLine($line);
-//                            $blockLine->addSymbolToNewLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
-//                            $line++;
-//                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true];
                         } else {
                             $symbolMeta->setIsFirstSymbolOfBlockLine(false);
 
                             $line->pushSymbol($symbolMeta);
-//                            $blockLine->addSymbolToExistingLine($line, $symbol, $symbolKey, $symbolMidYPoint, $symbolMidXPoint);
-//                            $symbolsMetaData[$blockKey][$line][count($symbolsMetaData[$blockKey][$line]) - 1]["isLastSymbolOfBlockLine"] = false;
-//                            $symbolsMetaData[$blockKey][$line][] = ["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => false, "isLastSymbolOfBlockLine" => true];
                         }
-
                     }
                 }
             }
         }
-# TODO CONTINUE REFACTORING
-            // COMPOSE THE SENTENCES BY SYMBOLS AND SYMBOL'S METADATA PER BLOCK //
-//            $line = 0;
 
-//            foreach ($symbolsMetaData[$blockKey] as $line=>$blockLines) {
-
+        // COMPOSE THE SENTENCES BY SYMBOLS AND SYMBOL'S METADATA PER BLOCK //
         foreach ($blockLine->getLines() as $lineKey=>$line) {
 
             $blockLineStartY = null;
@@ -161,46 +148,30 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                     $blockLineEndX = $blockLineSymbol->getSymbolX();
                 }
 
-//                if (isset($composeBlockLineDescription[$lineKey])) {
-//                if (count($blockLine->getLinesComposed()) > 0) {
-                    if (true === $blockLineSymbol->isStartOfTheWord() && false === $blockLineSymbol->isFirstSymbolOfBlockLine()) {
-                        $blockLineCompose->setDescription($blockLineCompose->getDescription() . " " . $blockLineSymbol->getText());
-//                      $composeBlockLineDescription[$lineKey] = ['description' => $composeBlockLineDescription[$lineKey]['description'] . " " . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
-                    } else {
-                        $blockLineCompose->setDescription($blockLineCompose->getDescription() . $blockLineSymbol->getText());
-//                        $composeBlockLineDescription[$lineKey] = ['description' => $composeBlockLineDescription[$lineKey]['description'] . $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
-                    }
-//                } else {
-//                    $blockLineCompose->setDescription($blockLineSymbol->getText());
-                    $blockLineCompose->setBlockLineStartY($blockLineStartY);
-                    $blockLineCompose->setBlockLineEndY($blockLineEndY);
-                    $blockLineCompose->setBlockLineStartX($blockLineStartX);
-                    $blockLineCompose->setBlockLineEndX($blockLineEndX);
+                if (true === $blockLineSymbol->isStartOfTheWord() && false === $blockLineSymbol->isFirstSymbolOfBlockLine()) {
+                    $blockLineCompose->setDescription($blockLineCompose->getDescription() . " " . $blockLineSymbol->getText());
+                } else {
+                    $blockLineCompose->setDescription($blockLineCompose->getDescription() . $blockLineSymbol->getText());
+                }
+                $blockLineCompose->setBlockLineStartY($blockLineStartY);
+                $blockLineCompose->setBlockLineEndY($blockLineEndY);
+                $blockLineCompose->setBlockLineStartX($blockLineStartX);
+                $blockLineCompose->setBlockLineEndX($blockLineEndX);
 
-//                    $composeBlockLineDescription[$lineKey] = ['description' => $blockLineSymbol->getText(), 'blockLineStartY' => $blockLineStartY, "blockLineEndY" => $blockLineEndY, "blockLineStartX" => $blockLineStartX, "blockLineEndX" =>  $blockLineEndX];
-//                }
             }
             $blockLine->addLineComposed($blockLineCompose);
         }
 
+        // COMPOSE FULL LINES AMONG BLOCKS BY LINES COMPOSED PREVIOUSLY PER BLOCK //
+        $linesComposedTempBase = $blockLine->getLinesComposed();
+        foreach ($linesComposedTempBase as $blockKeyA=>$blockA) {
+            $counter = $blockKeyA + 1;
 
-// COMPOSE FULL LINES AMONG BLOCKS BY LINES COMPOSED PREVIOUSLY PER BLOCK //
-        $leftOvers = [];
-        $notFound = true;
-        foreach ($blockLine->getLinesComposed() as $blockKeyA=>$blockA) {
-//            dd($blockA);
-//            foreach ($blockA as $lineDataAKey=>$lineDataA) {
-            $counter = 0;
-            $lineMatchFound = false;
-
-            while ($counter < count($blockLine->getLinesComposed())) {
-                if ($blockKeyA === $counter) {
-                    $counter++;
+            while ($blockB = next($linesComposedTempBase)) {
+                if ($blockA == $blockB) {
                     continue;
                 }
 
-                $blockB = $blockLine->getLinesComposed()[$counter];
-//                    foreach ($blockLine->getLinesComposed()[$counter] as $blockKeyB=>$blockB) {
                 /**
                  * @var BlockLineCompose $blockA
                  * @var BlockLineCompose $blockB
@@ -208,49 +179,45 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                 if (abs($blockA->getBlockLineStartY() - $blockB->getBlockLineEndY()) <= $thresholdIndicatorForSameLine) { // Means  that A is in same line with B
                     if ($blocksOrientation === '0d') {
                         if ($blockA->getBlockLineStartX() > $blockB->getBlockLineStartX()) {
-                            $lineMatchFound = true;
-                            $notFound = false;
                             $mergedLines[] = ['text' => $blockB->getDescription() . " " . $blockA->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2, 'lineStartX' => $blockB->getBlockLineStartX(), 'lineEndX' => $blockA->getBlockLineEndX()];
-                            unset($blockLine->getLinesComposed()[$counter]);
-                            unset($blockLine->getLinesComposed()[$blockKeyA]);
+                            unset($linesComposedTempBase[key($linesComposedTempBase)]);
+                            unset($linesComposedTempBase[$blockKeyA]);
+                            $linesComposedTempBase = array_values($linesComposedTempBase);
+                            continue 2;
                         } else {
-                            $lineMatchFound = true;
-                            $notFound = false;
                             $mergedLines[] = ['text' => $blockA->getDescription() . " " . $blockB->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2, 'lineStartX' => $blockA->getBlockLineStartX(), 'lineEndX' => $blockB->getBlockLineEndX()];
-                            unset($blockLine->getLinesComposed()[$counter]);
-                            unset($blockLine->getLinesComposed()[$blockKeyA]);
+                            unset($linesComposedTempBase[key($linesComposedTempBase)]);
+                            unset($linesComposedTempBase[$blockKeyA]);
+                            $linesComposedTempBase = array_values($linesComposedTempBase);
+                            continue 2;
                         }
                     } else {
                         if ($blockA->getBlockLineStartX() > $blockB->getBlockLineStartX()) {
-                            $lineMatchFound = true;
-                            $notFound = false;
                             $mergedLines[] = ['text' =>  $blockA->getDescription() . " " . $blockB->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2, 'lineStartX' => $blockB->getBlockLineStartX(), 'lineEndX' => $blockA->getBlockLineEndX()];
-                            unset($blockLine->getLinesComposed()[$counter]);
-                            unset($blockLine->getLinesComposed()[$blockKeyA]);
+                            unset($linesComposedTempBase[key($linesComposedTempBase)]);
+                            unset($linesComposedTempBase[$blockKeyA]);
+                            $linesComposedTempBase = array_values($linesComposedTempBase);
+                            continue 2;
                         } else {
-                            $lineMatchFound = true;
-                            $notFound = false;
                             $mergedLines[] = ['text' => $blockB->getDescription() . " " . $blockA->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2, 'lineStartX' => $blockA->getBlockLineStartX(), 'lineEndX' => $blockB->getBlockLineEndX()];
-                            unset($blockLine->getLinesComposed()[$counter]);
-                            unset($blockLine->getLinesComposed()[$blockKeyA]);
+                            unset($linesComposedTempBase[key($linesComposedTempBase)]);
+                            unset($linesComposedTempBase[$blockKeyA]);
+                            $linesComposedTempBase = array_values($linesComposedTempBase);
+                            continue 2;
                         }
                     }
+
                 }
-//                    }
                 $counter++;
             }
-//            }
+
+            reset($linesComposedTempBase);
         }
-        dd($mergedLines);
-        foreach ($blockLine->getLinesComposed() as $blockKeyA=>$blockA) {
-            if (count($blockA) > 0) {
-                foreach ($blockA as $lineDataAKey=>$lineDataA) {
-                    $mergedLines[] = ['text' => $lineDataA["description"], 'lineY' => ($lineDataA["blockLineStartY"] + $lineDataA["blockLineEndY"]) / 2, 'lineStartX' => $lineDataA["blockLineStartX"], 'lineEndX' => $lineDataA["blockLineEndX"]];
-                }
-            }
+        foreach ($linesComposedTempBase as $blockKeyA=>$blockA) {
+            $mergedLines[] = ['text' => $blockA->getDescription(), 'lineY' => ($blockA->getBlockLineStartY() + $blockA->getBlockLineEndY()) / 2, 'lineStartX' => $blockA->getBlockLineStartX(), 'lineEndX' => $blockA->getBlockLineEndX()];
         }
 
-// Order by line Y coordinates
+        // Order by line Y coordinates
         $linesYCoordinate = array_column($mergedLines, 'lineY');
         array_multisort($linesYCoordinate, SORT_ASC, $mergedLines);
 
