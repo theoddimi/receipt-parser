@@ -15,7 +15,7 @@ class BlockLineBuilder
      */
     public function getResultLines(): array
     {
-        return $this->resultLine;
+        return $this->resultLines;
     }
 
     /**
