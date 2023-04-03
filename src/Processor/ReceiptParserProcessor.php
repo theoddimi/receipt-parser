@@ -244,18 +244,19 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         // Order by line Y coordinates
         $mergedLines = [];
 
-        foreach ($blockLine->getResultLines() as $resultLine) {
+        foreach ($blockLine->getResultLines() as $key => $resultLine) {
             /**
              * @var ResultLine $resultLine
              */
-            $mergedLines['text'] = $resultLine->getText();
-            $mergedLines['lineY'] = $resultLine->getLineY();
-            $mergedLines['lineStartX'] = $resultLine->getLineStartX();
-            $mergedLines['lineEndX'] = $resultLine->getLineEndX();
+            $mergedLines[$key]['text'] = $resultLine->getText();
+            $mergedLines[$key]['lineY'] = $resultLine->getLineY();
+            $mergedLines[$key]['lineStartX'] = $resultLine->getLineStartX();
+            $mergedLines[$key]['lineEndX'] = $resultLine->getLineEndX();
         }
 
         $linesYCoordinate = array_column($mergedLines, 'lineY');
         array_multisort($linesYCoordinate, SORT_ASC, $mergedLines);
+
 
         // Reset the result lines after order completion
         $blockLine->setResultLines($mergedLines);

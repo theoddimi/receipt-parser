@@ -32,11 +32,23 @@ class BlockLineBuilder
     }
 
     /**
-     * @param array $resultLine
+     * @param array $resultLines
      */
-    public function setResultLines(array $resultLine): void
+    public function setResultLines(array $resultLines): void
     {
-        $this->resultLine = $resultLine;
+        $res = [];
+//        dd($resultLines);
+        foreach ($resultLines as $item) {
+            $resultLine = new ResultLine($item);
+            $resultLine->setText($item['text']);
+            $resultLine->setLineY($item['lineY']);
+            $resultLine->setLineStartX($item['lineStartX']);
+            $resultLine->setLineEndX($item['lineEndX']);
+
+            $res[] = $resultLine;
+        }
+
+        $this->resultLines = $res;
     }
 
     /**
@@ -102,36 +114,6 @@ class BlockLineBuilder
     {
         $this->linesComposed = $linesComposed;
     }
-
-
-//
-//    /**
-//     * @param Line $line
-//     * @param array $symbol
-//     * @param int $symbolKey
-//     * @param float $symbolMidYPoint
-//     * @param float $symbolMidXPoint
-//     * @return void
-//     */
-//    public function addNewLine(Line $line, array $symbol, int $symbolKey, float $symbolMidYPoint, float $symbolMidXPoint): void
-//    {
-//        $line->pushContent(["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => true, "isLastSymbolOfBlockLine" => true]);
-//        $this->lines[] = $line;
-//    }
-//
-//    /**
-//     * @param Line $line
-//     * @param array $symbol
-//     * @param int $symbolKey
-//     * @param float $symbolMidYPoint
-//     * @param float $symbolMidXPoint
-//     * @return void
-//     */
-//    public function addSymbolToExistingLine(Line $line, array $symbol, int $symbolKey, float $symbolMidYPoint, float $symbolMidXPoint): void
-//    {
-//        $this->lines[count($this->lines) - 1]["isLastSymbolOfBlockLine"] = false;
-//        $line->pushContent(["text" => $symbol['text'], "startOfTheWord" => $symbolKey === 0, "symbolY" => $symbolMidYPoint, "symbolX" => $symbolMidXPoint, "isFirstSymbolOfBlockLine" => false, "isLastSymbolOfBlockLine" => true]);
-//    }
 
     public function addLine(Line $line)
     {
