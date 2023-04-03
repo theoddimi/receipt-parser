@@ -8,6 +8,36 @@ class BlockLineBuilder
     public array $word;
     public array $lines;
     public array $linesComposed;
+    public array $resultLines;
+
+    /**
+     * @return array
+     */
+    public function getResultLines(): array
+    {
+        return $this->resultLine;
+    }
+
+    /**
+     * @param int $key
+     * @return ResultLine|null
+     */
+    public function getResultLineByKeyOrNull(int $key): ?ResultLine
+    {
+        if (isset($this->resultLines[$key])) {
+            return $this->resultLines[$key];
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array $resultLine
+     */
+    public function setResultLines(array $resultLine): void
+    {
+        $this->resultLine = $resultLine;
+    }
 
     /**
      * @return array
@@ -111,5 +141,10 @@ class BlockLineBuilder
     public function addLineComposed(BlockLineCompose $lineCompose)
     {
         $this->linesComposed[] = $lineCompose;
+    }
+
+    public function addResultLine(ResultLine $resultLine)
+    {
+        $this->resultLines[] = $resultLine;
     }
 }
