@@ -167,7 +167,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $counter = 0;
         foreach ($linesComposedTempBase as $blockKeyA=>$blockA) {
             $linesComposedTemp = $linesComposedTempBase;
-sdf
+
             /**
              * @var BlockLineCompose $blockA
              * @var BlockLineCompose $blockB
@@ -238,7 +238,7 @@ sdf
         }
         echo '</pre>';
 
-        $end_time = microtime(true);
+//        $end_time = microtime(true);
 // Calculating the script execution time
 //        $execution_time = $end_time - $start_time;
 
