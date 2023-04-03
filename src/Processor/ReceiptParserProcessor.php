@@ -167,7 +167,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $counter = 0;
         foreach ($linesComposedTempBase as $blockKeyA=>$blockA) {
             $linesComposedTemp = $linesComposedTempBase;
-sdf
+
             /**
              * @var BlockLineCompose $blockA
              * @var BlockLineCompose $blockB
