@@ -32,10 +32,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
     {
         // Init variables
         $yThreshold = 30;
-        $symbolsMetaData = [];
-        $composeBlockLineDescription = [];
         $thresholdIndicatorForSameLine = 30;
-        $mergedLines = [];
         $currentBlockLineY = -1;
 
         $this->start();
@@ -245,8 +242,18 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         }
 
         // Order by line Y coordinates
-        // Order by line Y coordinates
-        $mergedLines = $blockLine->getResultLines();
+        $mergedLines = [];
+
+        foreach ($blockLine->getResultLines() as $resultLine) {
+            /**
+             * @var ResultLine $resultLine
+             */
+            $mergedLines['text'] = $resultLine->getText();
+            $mergedLines['lineY'] = $resultLine->getLineY();
+            $mergedLines['lineStartX'] = $resultLine->getLineStartX();
+            $mergedLines['lineEndX'] = $resultLine->getLineEndX();
+        }
+
         $linesYCoordinate = array_column($mergedLines, 'lineY');
         array_multisort($linesYCoordinate, SORT_ASC, $mergedLines);
 
