@@ -5,7 +5,7 @@ namespace Theod\CloudVisionClient\Builder;
 class ResultLine
 {
     private string $text;
-    private float $lineY;
+    public float $lineY;
     private float $lineStartX;
     private float $lineEndX;
 

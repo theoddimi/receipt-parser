@@ -8,7 +8,7 @@ class BlockLineBuilder
     public array $word;
     public array $lines;
     public array $linesComposed;
-    public array $resultLines;
+    private array $resultLines;
 
     /**
      * @return array

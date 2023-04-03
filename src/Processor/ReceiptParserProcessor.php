@@ -245,8 +245,8 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         }
 
         // Order by line Y coordinates
+        // Order by line Y coordinates
         $mergedLines = $blockLine->getResultLines();
-
         $linesYCoordinate = array_column($mergedLines, 'lineY');
         array_multisort($linesYCoordinate, SORT_ASC, $mergedLines);
 
@@ -254,15 +254,9 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $blockLine->setResultLines($mergedLines);
 
         echo '<pre>';
-        foreach ($mergedLines as $mergedLine) {
-            echo $mergedLine['text'] . "\n";
+        foreach ($blockLine->getResultLines() as $resultLine) {
+            echo $resultLine->getText() . "\n";
         }
         echo '</pre>';
-
-//        $end_time = microtime(true);
-// Calculating the script execution time
-//        $execution_time = $end_time - $start_time;
-
-//        echo "\n\n Execution time of script = " . $execution_time . " sec";
     }
 }
