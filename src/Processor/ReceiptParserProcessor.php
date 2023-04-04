@@ -3,18 +3,16 @@
 namespace Theod\CloudVisionClient\Processor;
 
 use Illuminate\Http\Client\Response;
-use Theod\CloudVisionClient\Builder\BlockLineBuilder;
 use Theod\CloudVisionClient\Builder\BlockLineCompose;
 use Theod\CloudVisionClient\Builder\Line;
+use Theod\CloudVisionClient\Builder\ReceiptParserBuilder;
 use Theod\CloudVisionClient\Builder\ResultLine;
 use Theod\CloudVisionClient\Builder\Symbol;
-use Theod\CloudVisionClient\Builder\WordBuilder;
 use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
 use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\CloudVisionClient\Services\CloudVisionService;
-use Theod\CloudVisionClient\Objects\Uri;
 
 class ReceiptParserProcessor extends Processor implements ReceiptParserProcessorInterface
 {
@@ -46,122 +44,54 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         // Find orientation of blocks returned
         $blocksOrientation = $this->receiptParserUtility->specifyBlocksOrientationFromResponse($receiptParserResponse);
         $receiptParserResponse->setBlocksOrientation($blocksOrientation);
+        
         $response = $receiptParserResponse->toArray();
         $blocks = $this->receiptParserUtility->retrieveBlocksFromDecodedResponse($response);
 
-        $blockLine = new BlockLineBuilder();
-
         // Start blocks looping
-        foreach ($blocks as $blockKey=>$block) {
-            $blockLine->setBlock($block);
-            $line = 0;
-            $paragraphs = $this->receiptParserUtility->getParagraphsFromBlock($block);
-
-            foreach ($paragraphs as $paragraphKey => $paragraph) {
-                $words = $this->receiptParserUtility->getWordsFromParagraph($paragraph);
-
-                foreach ($words as $wordKey => $word) {
-                    $blockLine->setWord($word);
-                    $symbols = $this->receiptParserUtility->getSymbolsFromWord($word);
-
-                    foreach ($symbols as $symbolKey => $symbol) {
-                        ################ Calculate current symbol's y and check line status #########################
-                        // Calculate the average of symbols' left and right boundaries y coordinates for top and bottom side
-                        if (ReceiptParserUtility::BLOCK_ORIENTATION_ZERO_DEG === $blocksOrientation) {
-                            $symbolTopYBoundAvg = $this->receiptParserUtility->calculateTopSideYBoundAverageForSymbolAndOrientationZero($symbol);
-                            $symbolBottomYBoundAvg = $this->receiptParserUtility->calculateBottomSideYBoundAverageForSymbolAndOrientationZero($symbol);
-                            $symbolLeftXBoundAvg = $this->receiptParserUtility->calculateLeftSideXBoundAverageForSymbolAndOrientationZero($symbol);
-                            $symbolRightXBoundAvg = $this->receiptParserUtility->calculateRightSideXBoundAverageForSymbolAndOrientationZero($symbol);
-                        } else {
-                            $symbolTopYBoundAvg = $this->receiptParserUtility->calculateTopSideYBoundAverageForSymbolAndOrientationNinety($symbol);
-                            $symbolBottomYBoundAvg = $this->receiptParserUtility->calculateBottomSideYBoundAverageForSymbolAndOrientationNinety($symbol);
-                            $symbolLeftXBoundAvg = $this->receiptParserUtility->calculateLeftSideXBoundAverageForSymbolAndOrientationNinety($symbol);
-                            $symbolRightXBoundAvg = $this->receiptParserUtility->calculateRightSideXBoundAverageForSymbolAndOrientationNinety($symbol);
-                        }
-
-                        // Calculate the point in the middle of the top and bottom Y coordinates of the symbol
-                        $symbolMidYPoint = $this->receiptParserUtility->calculateMiddleYPointForSymbolBoundsY(
-                            $symbolTopYBoundAvg,
-                            $symbolBottomYBoundAvg
-                        );
-
-                        $symbolMidXPoint = $this->receiptParserUtility->calculateMiddleXPointForSymbolBoundsX(
-                            $symbolLeftXBoundAvg,
-                            $symbolRightXBoundAvg
-                        );
-
-                        ################## Compose block line words, symbol by symbol #############
-                        $symbolMeta = new Symbol();
-                        $symbolMeta->setText($symbol['text']);
-                        $symbolMeta->setStartOfTheWord(0 === $symbolKey);
-                        $symbolMeta->setSymbolY($symbolMidYPoint);
-                        $symbolMeta->setSymbolX($symbolMidXPoint);
-                        $symbolMeta->setIsLastSymbolOfBlockLine(true);
-
-                        if ($paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0) {
-                            $currentBlockLineY = $symbolMidYPoint;
-                            $symbolMeta->setIsFirstSymbolOfBlockLine(true);
-
-                            $line = new Line();
-                            $line->pushSymbol($symbolMeta);
-                            $blockLine->addLine($line);
-                        } else if ($symbolMidYPoint > ($currentBlockLineY + $yThreshold)) {
-                            $symbolMeta->setIsFirstSymbolOfBlockLine(true);
-                            $currentBlockLineY = $symbolMidYPoint;
-                            $line = new Line();
-                            $line->pushSymbol($symbolMeta);
-                            $blockLine->addLine($line);
-                        } else {
-                            $symbolMeta->setIsFirstSymbolOfBlockLine(false);
-
-                            $line->pushSymbol($symbolMeta);
-                        }
-                    }
-                }
-            }
-        }
+        $builder = $this->receiptParserUtility->createLineGroupsOfSymbolsFromBlocks($blocks, $blocksOrientation, $yThreshold);
 
         // COMPOSE THE SENTENCES BY SYMBOLS AND SYMBOL'S METADATA PER BLOCK //
-        foreach ($blockLine->getLines() as $lineKey=>$line) {
+        foreach ($builder->getLines() as $lineKey=>$line) {
 
-            $blockLineStartY = null;
-            $blockLineEndY = null;
-            $blockLineStartX = null;
-            $blockLineEndX = null;
+            $builderStartY = null;
+            $builderEndY = null;
+            $builderStartX = null;
+            $builderEndX = null;
 
-            $blockLineCompose = new BlockLineCompose();
+            $builderCompose = new BlockLineCompose();
 
-            foreach($line->getContent() as $blockLineSymbol) {
+            foreach($line->getContent() as $builderSymbol) {
                 // Keep track of start and end of line coordinates
                 /**
-                 * @var Symbol $blockLineSymbol
+                 * @var Symbol $builderSymbol
                  */
-                if (true === $blockLineSymbol->isFirstSymbolOfBlockLine() && null === $blockLineStartY) {
-                    $blockLineStartY = $blockLineSymbol->getSymbolY();
-                    $blockLineStartX = $blockLineSymbol->getSymbolX();
+                if (true === $builderSymbol->isFirstSymbolOfBlockLine() && null === $builderStartY) {
+                    $builderStartY = $builderSymbol->getSymbolY();
+                    $builderStartX = $builderSymbol->getSymbolX();
                 }
 
-                if (true === $blockLineSymbol->isLastSymbolOfBlockLine() && null === $blockLineEndY) {
-                    $blockLineEndY = $blockLineSymbol->getSymbolY();
-                    $blockLineEndX = $blockLineSymbol->getSymbolX();
+                if (true === $builderSymbol->isLastSymbolOfBlockLine() && null === $builderEndY) {
+                    $builderEndY = $builderSymbol->getSymbolY();
+                    $builderEndX = $builderSymbol->getSymbolX();
                 }
 
-                if (true === $blockLineSymbol->isStartOfTheWord() && false === $blockLineSymbol->isFirstSymbolOfBlockLine()) {
-                    $blockLineCompose->setDescription($blockLineCompose->getDescription() . " " . $blockLineSymbol->getText());
+                if (true === $builderSymbol->isStartOfTheWord() && false === $builderSymbol->isFirstSymbolOfBlockLine()) {
+                    $builderCompose->setDescription($builderCompose->getDescription() . " " . $builderSymbol->getText());
                 } else {
-                    $blockLineCompose->setDescription($blockLineCompose->getDescription() . $blockLineSymbol->getText());
+                    $builderCompose->setDescription($builderCompose->getDescription() . $builderSymbol->getText());
                 }
-                $blockLineCompose->setBlockLineStartY($blockLineStartY);
-                $blockLineCompose->setBlockLineEndY($blockLineEndY);
-                $blockLineCompose->setBlockLineStartX($blockLineStartX);
-                $blockLineCompose->setBlockLineEndX($blockLineEndX);
+                $builderCompose->setBlockLineStartY($builderStartY);
+                $builderCompose->setBlockLineEndY($builderEndY);
+                $builderCompose->setBlockLineStartX($builderStartX);
+                $builderCompose->setBlockLineEndX($builderEndX);
 
             }
-            $blockLine->addLineComposed($blockLineCompose);
+            $builder->addLineComposed($builderCompose);
         }
 
         // COMPOSE FULL LINES AMONG BLOCKS BY LINES COMPOSED PREVIOUSLY PER BLOCK //
-        $linesComposedTempBase = $blockLine->getLinesComposed();
+        $linesComposedTempBase = $builder->getLinesComposed();
         $counter = 0;
         foreach ($linesComposedTempBase as $blockKeyA=>$blockA) {
             $linesComposedTemp = $linesComposedTempBase;
@@ -179,7 +109,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                     $lineY = ($blockA->getBlockLineStartY() + $blockB->getBlockLineEndY()) / 2;
                     $lineStartX = $blockB->getBlockLineStartX();
                     $lineEndX = $blockA->getBlockLineEndX();
-                    $resultLineByKey = $blockLine->getResultLineByKeyOrNull($counter);
+                    $resultLineByKey = $builder->getResultLineByKeyOrNull($counter);
 
                     if ($blocksOrientation === ReceiptParserUtility::BLOCK_ORIENTATION_ZERO_DEG) {
                         if ($blockA->getBlockLineStartX() > $blockB->getBlockLineStartX()) {
@@ -220,7 +150,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
                     unset($linesComposedTempBase[$blockKeyA]);
                     unset($linesComposedTempBase[$blockKeyB]);
 
-                    $blockLine->addResultLine($resultLine);
+                    $builder->addResultLine($resultLine);
                 }
             }
             $counter++;
@@ -238,13 +168,13 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
             $resultLine->setLineStartX($lineStartX);
             $resultLine->setLineY($lineY);
 
-            $blockLine->addResultLine($resultLine);
+            $builder->addResultLine($resultLine);
         }
 
         // Order by line Y coordinates
         $mergedLines = [];
 
-        foreach ($blockLine->getResultLines() as $key => $resultLine) {
+        foreach ($builder->getResultLines() as $key => $resultLine) {
             /**
              * @var ResultLine $resultLine
              */
@@ -259,10 +189,10 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
 
 
         // Reset the result lines after order completion
-        $blockLine->setResultLines($mergedLines);
+        $builder->setResultLines($mergedLines);
 
         echo '<pre>';
-        foreach ($blockLine->getResultLines() as $resultLine) {
+        foreach ($builder->getResultLines() as $resultLine) {
             echo $resultLine->getText() . "\n";
         }
         echo '</pre>';

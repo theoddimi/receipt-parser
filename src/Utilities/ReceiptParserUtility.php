@@ -2,12 +2,96 @@
 
 namespace Theod\CloudVisionClient\Utilities;
 
+use Theod\CloudVisionClient\Builder\Line;
+use Theod\CloudVisionClient\Builder\ReceiptParserBuilder;
+use Theod\CloudVisionClient\Builder\Symbol;
 use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
 
 class ReceiptParserUtility
 {
     public const BLOCK_ORIENTATION_ZERO_DEG = '0d';
     public const BLOCK_ORIENTATION_NINETY_DEG = '90d';
+
+    /**
+     * @param array $blocks
+     * @param string $blocksOrientation
+     * @param float $yThreshold
+     * @return ReceiptParserBuilder
+     */
+    public function createLineGroupsOfSymbolsFromBlocks(
+        array $blocks,
+        string $blocksOrientation,
+        float $yThreshold
+    ): ReceiptParserBuilder {
+        $builder = new ReceiptParserBuilder();
+
+        foreach ($blocks as $block) {
+            $builder->setBlock($block);
+            $paragraphs = $this->getParagraphsFromBlock($block);
+
+            foreach ($paragraphs as $paragraphKey => $paragraph) {
+                $words = $this->getWordsFromParagraph($paragraph);
+
+                foreach ($words as $wordKey => $word) {
+                    $symbols = $this->getSymbolsFromWord($word);
+
+                    foreach ($symbols as $symbolKey => $symbol) {
+                        ################ Calculate current symbol's y and check line status #########################
+                        // Calculate the average of symbols' left and right boundaries y coordinates for top and bottom side
+                        if (ReceiptParserUtility::BLOCK_ORIENTATION_ZERO_DEG === $blocksOrientation) {
+                            $symbolTopYBoundAvg = $this->calculateTopSideYBoundAverageForSymbolAndOrientationZero($symbol);
+                            $symbolBottomYBoundAvg = $this->calculateBottomSideYBoundAverageForSymbolAndOrientationZero($symbol);
+                            $symbolLeftXBoundAvg = $this->calculateLeftSideXBoundAverageForSymbolAndOrientationZero($symbol);
+                            $symbolRightXBoundAvg = $this->calculateRightSideXBoundAverageForSymbolAndOrientationZero($symbol);
+                        } else {
+                            $symbolTopYBoundAvg = $this->calculateTopSideYBoundAverageForSymbolAndOrientationNinety($symbol);
+                            $symbolBottomYBoundAvg = $this->calculateBottomSideYBoundAverageForSymbolAndOrientationNinety($symbol);
+                            $symbolLeftXBoundAvg = $this->calculateLeftSideXBoundAverageForSymbolAndOrientationNinety($symbol);
+                            $symbolRightXBoundAvg = $this->calculateRightSideXBoundAverageForSymbolAndOrientationNinety($symbol);
+                        }
+
+                        // Calculate the point in the middle of the top and bottom Y coordinates of the symbol
+                        $symbolMidYPoint = $this->calculateMiddleYPointForSymbolBoundsY(
+                            $symbolTopYBoundAvg,
+                            $symbolBottomYBoundAvg
+                        );
+
+                        $symbolMidXPoint = $this->calculateMiddleXPointForSymbolBoundsX(
+                            $symbolLeftXBoundAvg,
+                            $symbolRightXBoundAvg
+                        );
+
+                        ################## Compose block line words, symbol by symbol #############
+                        $line = new Line();
+
+                        $symbolMeta = new Symbol();
+                        $symbolMeta->setText($symbol['text']);
+                        $symbolMeta->setStartOfTheWord(0 === $symbolKey);
+                        $symbolMeta->setSymbolY($symbolMidYPoint);
+                        $symbolMeta->setSymbolX($symbolMidXPoint);
+                        $symbolMeta->setIsLastSymbolOfBlockLine(true);
+
+                        if ($paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0) {
+                            $currentBlockLineY = $symbolMidYPoint;
+                            $symbolMeta->setIsFirstSymbolOfBlockLine(true);
+                            $line->pushSymbol($symbolMeta);
+                            $builder->addLine($line);
+                        } else if ($symbolMidYPoint > ($currentBlockLineY + $yThreshold)) {
+                            $symbolMeta->setIsFirstSymbolOfBlockLine(true);
+                            $currentBlockLineY = $symbolMidYPoint;
+                            $line->pushSymbol($symbolMeta);
+                            $builder->addLine($line);
+                        } else {
+                            $symbolMeta->setIsFirstSymbolOfBlockLine(false);
+                            $line->pushSymbol($symbolMeta);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $builder;
+    }
 
     /**
      * @param array $json

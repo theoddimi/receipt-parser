@@ -2,12 +2,11 @@
 
 namespace Theod\CloudVisionClient\Builder;
 
-class BlockLineBuilder
+class ReceiptParserBuilder
 {
-    public array $block;
-    public array $word;
-    public array $lines;
-    public array $linesComposed;
+    private array $block;
+    private array $lines;
+    private array $linesComposed;
     private array $resultLines;
 
     /**
@@ -37,9 +36,9 @@ class BlockLineBuilder
     public function setResultLines(array $resultLines): void
     {
         $res = [];
-//        dd($resultLines);
+
         foreach ($resultLines as $item) {
-            $resultLine = new ResultLine($item);
+            $resultLine = new ResultLine();
             $resultLine->setText($item['text']);
             $resultLine->setLineY($item['lineY']);
             $resultLine->setLineStartX($item['lineStartX']);
@@ -76,30 +75,6 @@ class BlockLineBuilder
     }
 
     /**
-     * @param array $lines
-     */
-    public function setLines(array $lines): void
-    {
-        $this->line = $lines;
-    }
-
-    /**
-     * @return array
-     */
-    public function getWord(): array
-    {
-        return $this->word;
-    }
-
-    /**
-     * @param array $word
-     */
-    public function setWord(array $word): void
-    {
-        $this->word = $word;
-    }
-
-    /**
      * @return array
      */
     public function getLinesComposed(): array
@@ -108,24 +83,28 @@ class BlockLineBuilder
     }
 
     /**
-     * @param array $linesComposed
+     * @param Line $line
+     * @return void
      */
-    public function setLinesComposed(array $linesComposed): void
-    {
-        $this->linesComposed = $linesComposed;
-    }
-
-    public function addLine(Line $line)
+    public function addLine(Line $line): void
     {
         $this->lines[] = $line;
     }
 
-    public function addLineComposed(BlockLineCompose $lineCompose)
+    /**
+     * @param BlockLineCompose $lineCompose
+     * @return void
+     */
+    public function addLineComposed(BlockLineCompose $lineCompose): void
     {
         $this->linesComposed[] = $lineCompose;
     }
 
-    public function addResultLine(ResultLine $resultLine)
+    /**
+     * @param ResultLine $resultLine
+     * @return void
+     */
+    public function addResultLine(ResultLine $resultLine): void
     {
         $this->resultLines[] = $resultLine;
     }
