@@ -74,11 +74,13 @@ class ReceiptParserUtility
                         if ($paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0) {
                             $currentBlockLineY = $symbolMidYPoint;
                             $symbolMeta->setIsFirstSymbolOfBlockLine(true);
+                            $line = new Line();
                             $line->pushSymbol($symbolMeta);
                             $builder->addLine($line);
                         } else if ($symbolMidYPoint > ($currentBlockLineY + $yThreshold)) {
                             $symbolMeta->setIsFirstSymbolOfBlockLine(true);
                             $currentBlockLineY = $symbolMidYPoint;
+                            $line = new Line();
                             $line->pushSymbol($symbolMeta);
                             $builder->addLine($line);
                         } else {
