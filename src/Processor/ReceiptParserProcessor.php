@@ -49,48 +49,18 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $blocks = $this->receiptParserUtility->retrieveBlocksFromDecodedResponse($response);
 
         // Start blocks looping
-        $builder = $this->receiptParserUtility->createLineGroupsOfSymbolsFromBlocks($blocks, $blocksOrientation, $yThreshold, $currentBlockLineY);
+        $builder = $this->receiptParserUtility->buildLineGroupsOfSymbolsFromBlocks(
+            $blocks,
+            $blocksOrientation,
+            $yThreshold,
+            $currentBlockLineY
+        );
 
-        // COMPOSE THE SENTENCES BY SYMBOLS AND SYMBOL'S METADATA PER BLOCK //
-        foreach ($builder->getLines() as $lineKey=>$line) {
+        // Compose the sentences from line groups of symbols per block
+        $builder->buildFullLinesFromLineGroupsOfSymbols();
 
-            $builderStartY = null;
-            $builderEndY = null;
-            $builderStartX = null;
-            $builderEndX = null;
 
-            $builderCompose = new BlockLineCompose();
-
-            foreach($line->getContent() as $builderSymbol) {
-                // Keep track of start and end of line coordinates
-                /**
-                 * @var Symbol $builderSymbol
-                 */
-                if (true === $builderSymbol->isFirstSymbolOfBlockLine() && null === $builderStartY) {
-                    $builderStartY = $builderSymbol->getSymbolY();
-                    $builderStartX = $builderSymbol->getSymbolX();
-                }
-
-                if (true === $builderSymbol->isLastSymbolOfBlockLine() && null === $builderEndY) {
-                    $builderEndY = $builderSymbol->getSymbolY();
-                    $builderEndX = $builderSymbol->getSymbolX();
-                }
-
-                if (true === $builderSymbol->isStartOfTheWord() && false === $builderSymbol->isFirstSymbolOfBlockLine()) {
-                    $builderCompose->setDescription($builderCompose->getDescription() . " " . $builderSymbol->getText());
-                } else {
-                    $builderCompose->setDescription($builderCompose->getDescription() . $builderSymbol->getText());
-                }
-                $builderCompose->setBlockLineStartY($builderStartY);
-                $builderCompose->setBlockLineEndY($builderEndY);
-                $builderCompose->setBlockLineStartX($builderStartX);
-                $builderCompose->setBlockLineEndX($builderEndX);
-
-            }
-            $builder->addLineComposed($builderCompose);
-        }
-
-        // COMPOSE FULL LINES AMONG BLOCKS BY LINES COMPOSED PREVIOUSLY PER BLOCK //
+        // Compose sentences among blocks combining full lines of each block
         $linesComposedTempBase = $builder->getLinesComposed();
         $counter = 0;
         foreach ($linesComposedTempBase as $blockKeyA=>$blockA) {

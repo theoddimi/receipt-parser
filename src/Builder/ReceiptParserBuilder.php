@@ -108,4 +108,52 @@ class ReceiptParserBuilder
     {
         $this->resultLines[] = $resultLine;
     }
+
+    /**
+     * @return $this
+     */
+    public function buildFullLinesFromLineGroupsOfSymbols(): ReceiptParserBuilder
+    {
+        foreach ($this->getLines() as $line) {
+
+            $builderStartY = null;
+            $builderEndY = null;
+            $builderStartX = null;
+            $builderEndX = null;
+
+            $builderCompose = new BlockLineCompose();
+
+            foreach($line->getContent() as $builderSymbol) {
+                /**
+                 * @var Symbol $builderSymbol
+                 */
+                if (true === $builderSymbol->isFirstSymbolOfBlockLine() && null === $builderStartY) {
+                    $builderStartY = $builderSymbol->getSymbolY();
+                    $builderStartX = $builderSymbol->getSymbolX();
+                }
+
+                if (true === $builderSymbol->isLastSymbolOfBlockLine() && null === $builderEndY) {
+                    $builderEndY = $builderSymbol->getSymbolY();
+                    $builderEndX = $builderSymbol->getSymbolX();
+                }
+
+                if (true === $builderSymbol->isStartOfTheWord() && false === $builderSymbol->isFirstSymbolOfBlockLine()) {
+                    $description = $builderCompose->getDescription() . " " . $builderSymbol->getText();
+                } else {
+                    $description = $builderCompose->getDescription() . $builderSymbol->getText();
+                }
+
+                $builderCompose->setDescription($description);
+                $builderCompose->setBlockLineStartY($builderStartY);
+                $builderCompose->setBlockLineEndY($builderEndY);
+                $builderCompose->setBlockLineStartX($builderStartX);
+                $builderCompose->setBlockLineEndX($builderEndX);
+
+            }
+
+            $this->addLineComposed($builderCompose);
+        }
+
+        return $this;
+    }
 }

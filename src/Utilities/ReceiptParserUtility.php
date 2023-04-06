@@ -17,9 +17,10 @@ class ReceiptParserUtility
      * @param array $blocks
      * @param string $blocksOrientation
      * @param float $yThreshold
+     * @param float $currentBlockLineY
      * @return ReceiptParserBuilder
      */
-    public function createLineGroupsOfSymbolsFromBlocks(
+    public function buildLineGroupsOfSymbolsFromBlocks(
         array $blocks,
         string $blocksOrientation,
         float $yThreshold,
@@ -38,35 +39,29 @@ class ReceiptParserUtility
                     $symbols = $this->getSymbolsFromWord($word);
 
                     foreach ($symbols as $symbolKey => $symbol) {
-                        ################ Calculate current symbol's y and check line status #########################
                         // Calculate the average of symbols' left and right boundaries y coordinates for top and bottom side
-
                         $symbolBounds = $this->getBoundsForSymbolByOrientation($symbol, $blocksOrientation);
 
-
                         // Calculate the point in the middle of the top and bottom Y coordinates of the symbol
-                        $symbolMidYPoint = $this->calculateMiddleYPointForSymbolBoundsY(
-                            $symbolBounds->getSymbolTopYBoundAvg(),
-                            $symbolBounds->getSymbolBottomYBoundAvg(),
-                        );
+                        $symbolMidYPoint = $this->getMiddlePointOfYCoordinateFromSymbolBounds($symbolBounds);
+                        $symbolMidXPoint = $this->getMiddlePointOfXCoordinateFromSymbolBounds($symbolBounds);
 
-                        $symbolMidXPoint = $this->calculateMiddleXPointForSymbolBoundsX(
-                            $symbolBounds->getSymbolLeftXBoundAvg(),
-                            $symbolBounds->getSymbolRightXBoundAvg()
-                        );
-
-                        ################## Compose block line words, symbol by symbol #############
-
+                        // Compose line groups of symbols
                         $symbolMeta = new Symbol();
                         $symbolMeta->setText($symbol['text']);
-                        $symbolMeta->setStartOfTheWord(0 === $symbolKey);
+
+                        if (0 === $symbolKey) {
+                            $symbolMeta->setStartOfTheWord(true);
+                        } else {
+                            $symbolMeta->setStartOfTheWord(false);
+                        }
+
                         $symbolMeta->setSymbolY($symbolMidYPoint);
                         $symbolMeta->setSymbolX($symbolMidXPoint);
                         $symbolMeta->setIsLastSymbolOfBlockLine(true);
 
-
-                        if (true === $this->isFirstElementOfTheBlock($paragraphKey, $wordKey, $symbolKey) ||
-                            true === $this->assumeNewBlockLine($symbolMidYPoint, $currentBlockLineY, $yThreshold)
+                        if ($this->isFirstElementOfTheBlock($paragraphKey, $wordKey, $symbolKey) ||
+                            $this->assumeNewBlockLine($symbolMidYPoint, $currentBlockLineY, $yThreshold)
                         ) {
                             $line = new Line();
                             $currentBlockLineY = $symbolMidYPoint;
@@ -343,5 +338,29 @@ class ReceiptParserUtility
         }
 
         return $symbolBound;
+    }
+
+    /**
+     * @param SymbolBound $symbolBounds
+     * @return float
+     */
+    private function getMiddlePointOfYCoordinateFromSymbolBounds(SymbolBound $symbolBounds): float
+    {
+         return $this->calculateMiddleYPointForSymbolBoundsY(
+             $symbolBounds->getSymbolTopYBoundAvg(),
+             $symbolBounds->getSymbolBottomYBoundAvg(),
+         );
+    }
+
+    /**
+     * @param SymbolBound $symbolBounds
+     * @return float
+     */
+    private function getMiddlePointOfXCoordinateFromSymbolBounds(SymbolBound $symbolBounds): float
+    {
+        return $this->calculateMiddleXPointForSymbolBoundsX(
+            $symbolBounds->getSymbolLeftXBoundAvg(),
+            $symbolBounds->getSymbolRightXBoundAvg()
+        );
     }
 }
