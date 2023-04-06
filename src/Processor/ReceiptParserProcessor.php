@@ -49,7 +49,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $blocks = $this->receiptParserUtility->retrieveBlocksFromDecodedResponse($response);
 
         // Start blocks looping
-        $builder = $this->receiptParserUtility->createLineGroupsOfSymbolsFromBlocks($blocks, $blocksOrientation, $yThreshold);
+        $builder = $this->receiptParserUtility->createLineGroupsOfSymbolsFromBlocks($blocks, $blocksOrientation, $yThreshold, $currentBlockLineY);
 
         // COMPOSE THE SENTENCES BY SYMBOLS AND SYMBOL'S METADATA PER BLOCK //
         foreach ($builder->getLines() as $lineKey=>$line) {
