@@ -2,9 +2,8 @@
 
 namespace Theod\CloudVisionClient\Utilities;
 
-use Theod\CloudVisionClient\Builder\Line;
 use Theod\CloudVisionClient\Builder\ReceiptParserBuilder;
-use Theod\CloudVisionClient\Builder\Symbol;
+use Theod\CloudVisionClient\Builder\ResultLine;
 use Theod\CloudVisionClient\Builder\SymbolBound;
 use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
 
@@ -12,78 +11,6 @@ class ReceiptParserUtility
 {
     public const BLOCK_ORIENTATION_ZERO_DEG = '0d';
     public const BLOCK_ORIENTATION_NINETY_DEG = '90d';
-
-    /**
-     * @param array $blocks
-     * @param string $blocksOrientation
-     * @param float $yThreshold
-     * @param float $currentBlockLineY
-     * @return ReceiptParserBuilder
-     */
-    public function buildLineGroupsOfSymbolsFromBlocks(
-        array $blocks,
-        string $blocksOrientation,
-        float $yThreshold,
-        float $currentBlockLineY
-    ): ReceiptParserBuilder {
-        $builder = new ReceiptParserBuilder();
-
-        foreach ($blocks as $block) {
-            $builder->setBlock($block);
-            $paragraphs = $this->getParagraphsFromBlock($block);
-
-            foreach ($paragraphs as $paragraphKey => $paragraph) {
-                $words = $this->getWordsFromParagraph($paragraph);
-
-                foreach ($words as $wordKey => $word) {
-                    $symbols = $this->getSymbolsFromWord($word);
-
-                    foreach ($symbols as $symbolKey => $symbol) {
-                        // Calculate the average of symbols' left and right boundaries y coordinates for top and bottom side
-                        $symbolBounds = $this->getBoundsForSymbolByOrientation($symbol, $blocksOrientation);
-
-                        // Calculate the point in the middle of the top and bottom Y coordinates of the symbol
-                        $symbolMidYPoint = $this->getMiddlePointOfYCoordinateFromSymbolBounds($symbolBounds);
-                        $symbolMidXPoint = $this->getMiddlePointOfXCoordinateFromSymbolBounds($symbolBounds);
-
-                        // Compose line groups of symbols
-                        $symbolMeta = new Symbol();
-                        $symbolMeta->setText($symbol['text']);
-
-                        if (0 === $symbolKey) {
-                            $symbolMeta->setStartOfTheWord(true);
-                        } else {
-                            $symbolMeta->setStartOfTheWord(false);
-                        }
-
-                        $symbolMeta->setSymbolY($symbolMidYPoint);
-                        $symbolMeta->setSymbolX($symbolMidXPoint);
-                        $symbolMeta->setIsLastSymbolOfBlockLine(true);
-
-                        if ($this->isFirstElementOfTheBlock($paragraphKey, $wordKey, $symbolKey) ||
-                            $this->assumeNewBlockLine($symbolMidYPoint, $currentBlockLineY, $yThreshold)
-                        ) {
-                            $line = new Line();
-                            $currentBlockLineY = $symbolMidYPoint;
-                            $symbolMeta->setIsFirstSymbolOfBlockLine(true);
-                            $line->pushSymbol($symbolMeta);
-                            $builder->addLine($line);
-                        } else {
-                            $symbolMeta->setIsFirstSymbolOfBlockLine(false);
-
-                            if (!isset($line) || false === $line instanceof Line) {
-                                $line = new Line();
-                            }
-
-                            $line->pushSymbol($symbolMeta);
-                        }
-                    }
-                }
-            }
-        }
-
-        return $builder;
-    }
 
     /**
      * @param array $json
@@ -284,7 +211,7 @@ class ReceiptParserUtility
      * @param int $symbolKey
      * @return bool
      */
-    private function isFirstElementOfTheBlock(int $paragraphKey, int $wordKey, int $symbolKey): bool
+    public function isFirstElementOfTheBlock(int $paragraphKey, int $wordKey, int $symbolKey): bool
     {
         return $paragraphKey === 0 && $wordKey === 0 && $symbolKey === 0;
     }
@@ -295,7 +222,7 @@ class ReceiptParserUtility
      * @param float $yThreshold
      * @return bool
      */
-    private function assumeNewBlockLine(float $symbolMidYPoint, float $currentBlockLineY, float $yThreshold): bool
+    public function assumeNewBlockLine(float $symbolMidYPoint, float $currentBlockLineY, float $yThreshold): bool
     {
         return $symbolMidYPoint > ($currentBlockLineY + $yThreshold);
     }
@@ -305,7 +232,7 @@ class ReceiptParserUtility
      * @param string $orientation
      * @return SymbolBound
      */
-    private function getBoundsForSymbolByOrientation(array $symbol, string $orientation): SymbolBound
+    public function getBoundsForSymbolByOrientation(array $symbol, string $orientation): SymbolBound
     {
         $symbolBound = new SymbolBound();
 
@@ -344,7 +271,7 @@ class ReceiptParserUtility
      * @param SymbolBound $symbolBounds
      * @return float
      */
-    private function getMiddlePointOfYCoordinateFromSymbolBounds(SymbolBound $symbolBounds): float
+    public function getMiddlePointOfYCoordinateFromSymbolBounds(SymbolBound $symbolBounds): float
     {
          return $this->calculateMiddleYPointForSymbolBoundsY(
              $symbolBounds->getSymbolTopYBoundAvg(),
@@ -356,11 +283,37 @@ class ReceiptParserUtility
      * @param SymbolBound $symbolBounds
      * @return float
      */
-    private function getMiddlePointOfXCoordinateFromSymbolBounds(SymbolBound $symbolBounds): float
+    public function getMiddlePointOfXCoordinateFromSymbolBounds(SymbolBound $symbolBounds): float
     {
         return $this->calculateMiddleXPointForSymbolBoundsX(
             $symbolBounds->getSymbolLeftXBoundAvg(),
             $symbolBounds->getSymbolRightXBoundAvg()
         );
+    }
+
+    /**
+     * @param ReceiptParserBuilder $receiptParserBuilder
+     * @return array
+     */
+    public function orderLinesOfReceiptParserBuilderResults(ReceiptParserBuilder $receiptParserBuilder): array
+    {
+        $results = array();
+
+        foreach ($receiptParserBuilder->getResultLines() as $key => $resultLine) {
+            /**
+             * @var ResultLine $resultLine
+             */
+            $results[$key] = [
+                'text' => $resultLine->getText(),
+                'lineY' => $resultLine->getLineY(),
+                'lineStartX' => $resultLine->getLineStartX(),
+                'lineEndX' => $resultLine->getLineEndX()
+            ];
+        }
+
+        $linesYCoordinate = array_column($results, 'lineY');
+        array_multisort($linesYCoordinate, SORT_ASC, $results);
+
+        return $results;
     }
 }

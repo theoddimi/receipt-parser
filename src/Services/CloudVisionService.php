@@ -6,6 +6,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
 use Exception;
+use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
 
 class CloudVisionService
 {
@@ -49,8 +50,10 @@ class CloudVisionService
     /**
      * @throws Exception
      */
-    public function postImageAnnotateWithRequest(ReceiptParserRequest $receiptParserRequest):  Response
+    public function postImageAnnotateWithRequest(ReceiptParserRequest $receiptParserRequest):  ReceiptParserResponse
     {
-        return $this->client->withBody($receiptParserRequest->getBodyAsJson())->send('post','images:annotate?key={key}');
+        $httpResponse =  $this->client->withBody($receiptParserRequest->getBodyAsJson())->send('post','images:annotate?key={key}');
+
+        return ReceiptParserResponse::createFromHttpResponse($httpResponse);
     }
 }
