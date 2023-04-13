@@ -6,6 +6,7 @@ use Theod\CloudVisionClient\Builder\ReceiptParserBuilder;
 use Theod\CloudVisionClient\Builder\ResultLine;
 use Theod\CloudVisionClient\Builder\SymbolBound;
 use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
+use Theod\CloudVisionClient\ReceiptParser\Collections\ResultLineCollection;
 
 class ReceiptParserUtility
 {
@@ -293,13 +294,14 @@ class ReceiptParserUtility
 
     /**
      * @param ReceiptParserBuilder $receiptParserBuilder
-     * @return array
+     * @return ResultLineCollection
      */
-    public function orderLinesOfReceiptParserBuilderResults(ReceiptParserBuilder $receiptParserBuilder): array
+    public function orderLinesOfReceiptParserBuilderResults(ReceiptParserBuilder $receiptParserBuilder): ResultLineCollection
     {
         $results = array();
+        $resultLineCollection = new ResultLineCollection();
 
-        foreach ($receiptParserBuilder->getResultLines() as $key => $resultLine) {
+        foreach ($receiptParserBuilder->getResultLines()->getItems() as $key => $resultLine) {
             /**
              * @var ResultLine $resultLine
              */
@@ -314,6 +316,12 @@ class ReceiptParserUtility
         $linesYCoordinate = array_column($results, 'lineY');
         array_multisort($linesYCoordinate, SORT_ASC, $results);
 
-        return $results;
+
+        foreach ($results as $item) {
+            $resultLine = ResultLine::create($item);
+            $resultLineCollection->addItem($resultLine);
+        }
+
+        return $resultLineCollection;
     }
 }

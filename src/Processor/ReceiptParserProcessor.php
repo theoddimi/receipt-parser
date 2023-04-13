@@ -4,6 +4,7 @@ namespace Theod\CloudVisionClient\Processor;
 
 use Theod\CloudVisionClient\Builder\ReceiptParserBuilder;
 use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
+use Theod\CloudVisionClient\ReceiptParser\Collections\ResultLineCollection;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\CloudVisionClient\Services\CloudVisionService;
@@ -11,20 +12,19 @@ use Exception;
 
 class ReceiptParserProcessor extends Processor implements ReceiptParserProcessorInterface
 {
+    private const THRESHOLD_Y = 30;
+
     public function __construct(
         private readonly CloudVisionService $cloudVisionService,
         private readonly ReceiptParserUtility $receiptParserUtility
     ){}
 
     /**
+     * @return ReceiptParserBuilder
      * @throws Exception
      */
-    public function run()
+    public function run(): ReceiptParserBuilder
     {
-        // Init variables
-        $yThreshold = 30;
-        $currentBlockLineY = -1;
-
         $this->start();
 
         $receiptParserRequest = new ReceiptParserRequest();
@@ -44,8 +44,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         $builder = $builder->buildLineGroupsOfSymbolsFromBlocks(
             $blocks,
             $blocksOrientation,
-            $yThreshold,
-            $currentBlockLineY
+            self::THRESHOLD_Y
         );
 
         // Compose the sentences from line groups of symbols per block
@@ -57,13 +56,9 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         // Order by line, based on Y coordinates
         $orderedResults = $this->receiptParserUtility->orderLinesOfReceiptParserBuilderResults($builder);
 
-        // Reset the result lines after order completion
+        // Reset the result lines
         $builder->setResultLines($orderedResults);
 
-        echo '<pre>';
-        foreach ($builder->getResultLines() as $resultLine) {
-            echo $resultLine->getText() . "\n";
-        }
-        echo '</pre>';
+        return $builder;
     }
 }

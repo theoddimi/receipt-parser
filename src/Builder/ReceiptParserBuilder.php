@@ -2,7 +2,7 @@
 
 namespace Theod\CloudVisionClient\Builder;
 
-use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
+use Theod\CloudVisionClient\ReceiptParser\Collections\ResultLineCollection;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 
 class ReceiptParserBuilder
@@ -11,7 +11,7 @@ class ReceiptParserBuilder
     private array $block;
     private array $lines;
     private array $linesComposed;
-    private array $resultLines;
+    private ResultLineCollection $resultLines;
     private string $blocksOrientation;
     private ReceiptParserUtility $receiptParserUtility;
 
@@ -33,9 +33,9 @@ class ReceiptParserBuilder
     }
 
     /**
-     * @return array
+     * @return ResultLineCollection
      */
-    public function getResultLines(): array
+    public function getResultLines(): ResultLineCollection
     {
         return $this->resultLines;
     }
@@ -46,31 +46,22 @@ class ReceiptParserBuilder
      */
     public function getResultLineByKeyOrNull(int $key): ?ResultLine
     {
-        if (isset($this->resultLines[$key])) {
-            return $this->resultLines[$key];
+        if (isset($this->resultLines->getItems()[$key])) {
+            return $this->resultLines->getItems()[$key];
         }
 
         return null;
     }
 
     /**
-     * @param array $resultLines
+     * @param ResultLineCollection $resultLines
+     * @return ReceiptParserBuilder
      */
-    public function setResultLines(array $resultLines): void
+    public function setResultLines(ResultLineCollection $resultLines): ReceiptParserBuilder
     {
-        $res = [];
+        $this->resultLines = $resultLines;
 
-        foreach ($resultLines as $item) {
-            $resultLine = new ResultLine();
-            $resultLine->setText($item['text']);
-            $resultLine->setLineY($item['lineY']);
-            $resultLine->setLineStartX($item['lineStartX']);
-            $resultLine->setLineEndX($item['lineEndX']);
-
-            $res[] = $resultLine;
-        }
-
-        $this->resultLines = $res;
+        return $this;
     }
 
     /**
@@ -252,15 +243,14 @@ class ReceiptParserBuilder
      * @param array $blocks
      * @param string $blocksOrientation
      * @param float $yThreshold
-     * @param float $currentBlockLineY
      * @return ReceiptParserBuilder
      */
     public function buildLineGroupsOfSymbolsFromBlocks(
         array $blocks,
         string $blocksOrientation,
-        float $yThreshold,
-        float $currentBlockLineY
+        float $yThreshold
     ): ReceiptParserBuilder {
+        $currentBlockLineY = -1;
 
         foreach ($blocks as $block) {
             $this->setBlock($block);

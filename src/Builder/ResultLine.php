@@ -9,6 +9,8 @@ class ResultLine
     private float $lineStartX;
     private float $lineEndX;
 
+    public function __construct(){}
+
     /**
      * @return string
      */
