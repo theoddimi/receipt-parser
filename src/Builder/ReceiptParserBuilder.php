@@ -46,7 +46,7 @@ class ReceiptParserBuilder
      */
     public function getResultLineByKeyOrNull(int $key): ?ResultLine
     {
-        if (isset($this->resultLines->getItems()[$key])) {
+        if (isset($this->resultLines) && isset($this->resultLines->getItems()[$key])) {
             return $this->resultLines->getItems()[$key];
         }
 
