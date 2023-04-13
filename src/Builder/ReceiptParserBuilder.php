@@ -2,7 +2,7 @@
 
 namespace Theod\CloudVisionClient\Builder;
 
-use Theod\CloudVisionClient\ReceiptParser\Collections\ResultLineCollection;
+use Theod\CloudVisionClient\Collections\ReceiptParser\ResultLineCollection;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 
 class ReceiptParserBuilder

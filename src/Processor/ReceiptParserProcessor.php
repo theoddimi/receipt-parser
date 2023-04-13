@@ -4,7 +4,6 @@ namespace Theod\CloudVisionClient\Processor;
 
 use Theod\CloudVisionClient\Builder\ReceiptParserBuilder;
 use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
-use Theod\CloudVisionClient\ReceiptParser\Collections\ResultLineCollection;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\CloudVisionClient\Services\CloudVisionService;
@@ -35,7 +34,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         // Find orientation of blocks returned
         $blocksOrientation = $this->receiptParserUtility->specifyBlocksOrientationFromResponse($receiptParserResponse);
         $receiptParserResponse->setBlocksOrientation($blocksOrientation);
-        
+
         $response = $receiptParserResponse->toArray();
         $blocks = $this->receiptParserUtility->retrieveBlocksFromDecodedResponse($response);
 

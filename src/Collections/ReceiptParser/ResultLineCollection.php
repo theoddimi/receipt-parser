@@ -1,6 +1,6 @@
 <?php
 
-namespace Theod\CloudVisionClient\ReceiptParser\Collections;
+namespace Theod\CloudVisionClient\Collections\ReceiptParser;
 
 use Theod\CloudVisionClient\Builder\ResultLine;
 use Theod\CloudVisionClient\Collections\CloudVisionCollection;
@@ -35,5 +35,4 @@ class ResultLineCollection extends CloudVisionCollection
 
         return $this;
     }
-
 }

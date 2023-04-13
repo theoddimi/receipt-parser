@@ -6,7 +6,7 @@ use Theod\CloudVisionClient\Builder\ReceiptParserBuilder;
 use Theod\CloudVisionClient\Builder\ResultLine;
 use Theod\CloudVisionClient\Builder\SymbolBound;
 use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
-use Theod\CloudVisionClient\ReceiptParser\Collections\ResultLineCollection;
+use Theod\CloudVisionClient\Collections\ReceiptParser\ResultLineCollection;
 
 class ReceiptParserUtility
 {
