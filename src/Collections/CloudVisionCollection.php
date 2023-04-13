@@ -4,7 +4,7 @@ namespace Theod\CloudVisionClient\Collections;
 
 abstract class CloudVisionCollection
 {
-    protected array $items;
+    protected array $items = [];
 
     /**
      * @return array
