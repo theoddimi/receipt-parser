@@ -298,27 +298,20 @@ class ReceiptParserUtility
      */
     public function orderLinesOfReceiptParserBuilderResults(ReceiptParserBuilder $receiptParserBuilder): ResultLineCollection
     {
-        $results = array();
         $resultLineCollection = new ResultLineCollection();
 
-        foreach ($receiptParserBuilder->getResultLines()->getItems() as $key => $resultLine) {
-            /**
-             * @var ResultLine $resultLine
-             */
-            $results[$key] = [
-                'text' => $resultLine->getText(),
-                'lineY' => $resultLine->getLineY(),
-                'lineStartX' => $resultLine->getLineStartX(),
-                'lineEndX' => $resultLine->getLineEndX()
-            ];
-        }
+        $results = $receiptParserBuilder->getResultLines()->toArray();
 
         $linesYCoordinate = array_column($results, 'lineY');
         array_multisort($linesYCoordinate, SORT_ASC, $results);
 
-
         foreach ($results as $item) {
-            $resultLine = ResultLine::create($item);
+            $resultLine = new ResultLine();
+            $resultLine->setText($item['text']);
+            $resultLine->setLineEndX($item['lineEndX']);
+            $resultLine->setLineStartX($item['lineStartX']);
+            $resultLine->setLineY($item['lineY']);
+
             $resultLineCollection->addItem($resultLine);
         }
 

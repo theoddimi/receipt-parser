@@ -35,4 +35,23 @@ class ResultLineCollection extends CloudVisionCollection
 
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $results = [];
+
+        foreach ($this->items as $resultLine) {
+            $results[] = [
+                'text' => $resultLine->getText(),
+                'lineY' => $resultLine->getLineY(),
+                'lineStartX' => $resultLine->getLineStartX(),
+                'lineEndX' => $resultLine->getLineEndX()
+            ];
+        }
+
+        return $results;
+    }
 }
