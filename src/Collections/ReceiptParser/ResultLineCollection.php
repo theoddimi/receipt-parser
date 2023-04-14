@@ -8,6 +8,9 @@ use Exception;
 
 class ResultLineCollection extends CloudVisionCollection
 {
+    /**
+     * @throws Exception
+     */
     public function __construct(array $items = [])
     {
        foreach ($items as $item) {

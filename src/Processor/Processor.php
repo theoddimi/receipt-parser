@@ -15,6 +15,9 @@ abstract class Processor
 
 
     /**
+     * This is set from the api endpoint controller in routes. Is the uri of the storage path location in which
+     * the image/file has been saved by mobile app and passed to backend for further process.
+     *
      * @param string $sourceUri
      * @return void
      */
@@ -46,6 +49,26 @@ abstract class Processor
     protected function end(): void
     {
         $this->end = microtime(true);
+        $this->calculateExecutionDuration();
+    }
+
+    /**
+     * @return void
+     */
+    protected function endSuccess(): void
+    {
+        $this->end = microtime(true);
+        $this->status = new ProcessorStatus(ProcessorStatus::SUCCESS);
+        $this->calculateExecutionDuration();
+    }
+
+    /**
+     * @return void
+     */
+    protected function endWithError(): void
+    {
+        $this->end = microtime(true);
+        $this->status = new ProcessorStatus(ProcessorStatus::FAILED);
         $this->calculateExecutionDuration();
     }
 

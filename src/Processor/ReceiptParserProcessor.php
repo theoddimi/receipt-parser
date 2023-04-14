@@ -4,6 +4,7 @@ namespace Theod\CloudVisionClient\Processor;
 
 use Theod\CloudVisionClient\Builder\ReceiptParserBuilder;
 use Theod\CloudVisionClient\Parser\ReceiptParserRequest;
+use Theod\CloudVisionClient\Parser\ReceiptParserResponse;
 use Theod\CloudVisionClient\Utilities\ReceiptParserUtility;
 use Theod\CloudVisionClient\Processor\Contracts\ReceiptParserProcessorInterface;
 use Theod\CloudVisionClient\Services\CloudVisionService;
@@ -26,10 +27,7 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
     {
         $this->start();
 
-        $receiptParserRequest = new ReceiptParserRequest();
-        $receiptParserRequest->addSourceUriToBody($this->getSourceUriToProcess());
-
-        $receiptParserResponse = $this->cloudVisionService->postImageAnnotateWithRequest($receiptParserRequest);
+        $receiptParserResponse = $this->processRequest();
 
         // Find orientation of blocks returned
         $blocksOrientation = $this->receiptParserUtility->specifyBlocksOrientationFromResponse($receiptParserResponse);
@@ -58,6 +56,20 @@ class ReceiptParserProcessor extends Processor implements ReceiptParserProcessor
         // Reset the result lines
         $builder->setResultLines($orderedResults);
 
+        $this->endSuccess();
+
         return $builder;
+    }
+
+    /**
+     * @return ReceiptParserResponse
+     * @throws Exception
+     */
+    private function processRequest(): ReceiptParserResponse
+    {
+        $receiptParserRequest = new ReceiptParserRequest();
+        $receiptParserRequest->addSourceUriToBody($this->getSourceUriToProcess());
+
+        return $this->cloudVisionService->postImageAnnotateWithRequest($receiptParserRequest);
     }
 }
