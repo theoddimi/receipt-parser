@@ -47,12 +47,7 @@ class ResultLineCollection extends CloudVisionCollection
         $results = [];
 
         foreach ($this->items as $resultLine) {
-            $results[] = [
-                'text' => $resultLine->getText(),
-                'lineY' => $resultLine->getLineY(),
-                'lineStartX' => $resultLine->getLineStartX(),
-                'lineEndX' => $resultLine->getLineEndX()
-            ];
+            $results[] = $resultLine->toArray();
         }
 
         return $results;

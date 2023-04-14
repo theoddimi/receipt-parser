@@ -74,4 +74,19 @@ class ResultLine
     {
         $this->lineEndX = $lineEndX;
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $result = [];
+
+        $result['text'] = $this->text;
+        $result['lineY'] = $this->lineY;
+        $result['lineStartX'] = $this->lineStartX;
+        $result['lineEndX'] = $this->lineEndX;
+
+        return $result;
+    }
 }
