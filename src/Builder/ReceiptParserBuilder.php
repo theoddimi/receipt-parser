@@ -28,6 +28,7 @@ class ReceiptParserBuilder
         $builder = new self();
         $builder->receiptParserUtility = $receiptParserUtility;
         $builder->blocksOrientation = $blocksOrientation;
+        $builder->resultLines = new ResultLineCollection();
 
         return $builder;
     }
