@@ -120,7 +120,7 @@ class ReceiptParserBuilder
      */
     public function addResultLine(ResultLine $resultLine): void
     {
-        $this->resultLines[] = $resultLine;
+        $this->resultLines->addItem($resultLine);
     }
 
     /**
